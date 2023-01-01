@@ -248,6 +248,9 @@ public class Main extends javax.swing.JFrame {
 
     private void btn_addAutor_ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_addAutor_ActionPerformed
         // TODO add your handling code here:
+        AddAuthor aa = new AddAuthor();
+        aa.setVisible(true);
+       
     }//GEN-LAST:event_btn_addAutor_ActionPerformed
 
     private void btn_vybratZanr_ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_vybratZanr_ActionPerformed
