@@ -8,6 +8,6 @@ package com.mycompany.mavenproject1;
 public class Doklad {
     int id;
     String datum;
-    String typ;
+    int id_typ;
     double celkovaCastka;
 }

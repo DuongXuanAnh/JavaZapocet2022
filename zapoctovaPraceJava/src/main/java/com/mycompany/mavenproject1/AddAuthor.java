@@ -4,6 +4,12 @@
  */
 package com.mycompany.mavenproject1;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import javax.swing.JOptionPane;
+
 /**
  *
  * @author david
@@ -109,12 +115,39 @@ public class AddAuthor extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-
+    /**
+     * Event handler for the "Add" button that inserts a new author record into the "autor" table
+     * in the "java_winter" database using the name and nationality values entered in the text boxes.
+     * Uses a prepared statement to prevent SQL injection attacks and displays a success or error message.
+     * @param evt the action event triggered by clicking the "Add" button
+     */
     private void btn_add_ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_add_ActionPerformed
-        // TODO add your handling code here:
-        System.out.println(txtBox_autorName.getText());   
-        System.out.println(txtBox_narodnost.getText());
-
+        
+        String url = "jdbc:mysql://localhost:3306/java_winter";
+        String user = "root";
+        String password = "";
+            try {
+            Connection connection = DriverManager.getConnection(url, user, password);
+            
+            String name = txtBox_autorName.getText();            
+            String nationality = txtBox_narodnost.getText();
+            String sql = "INSERT INTO autor (jmeno, narodnost) VALUES (?, ?)";
+            
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setString(1, name);
+                statement.setString(2, nationality);
+                statement.executeUpdate();
+                JOptionPane.showMessageDialog(null, "Autor byl přidán");
+            } catch (SQLException e) {
+                System.out.println(e);
+                JOptionPane.showMessageDialog(null, "Chyba, zkontrolujte si informace");
+            }
+            
+            connection.close();
+        } catch (SQLException e) {
+            System.out.println(e);
+            JOptionPane.showMessageDialog(null, "Chyba, zkontrolujte si informace");
+        }
     }//GEN-LAST:event_btn_add_ActionPerformed
 
     /**
