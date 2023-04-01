@@ -6,21 +6,26 @@ import javax.swing.text.NumberFormatter;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.text.NumberFormat;
+import java.util.Arrays;
 
 public class AddBook extends JPanel {
 
-
     public AddBook() {
-        setLayout(new GridLayout(0, 1, 5, 5)); // 0 řádků, 2 sloupce, 10 pixelů mezera vodorovně i svisle
+        setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
 
         JLabel nameLabel = new JLabel("Název");
-        JTextField nameField = new JTextField();
+        JTextField nameField = new JTextField(20);
 
         JLabel authorLabel = new JLabel("Autor");
         JComboBox<String> authorComboBox = new JComboBox<>(new String[]{"Autor 1", "Autor 2", "Autor 3"});
 
         JLabel genresLabel = new JLabel("Žánr");
-        JComboBox<String> genresComboBox = new JComboBox<>(new String[]{"Zanr 1", "Zanr 2", "Zanr 3"});
+        String[] zanry = {"Sci-fi (vědeckofantastický)", "Romantika", "Thriller", "Detektivka", "Fantasy", "Horor", "Komedie", "Akční", "Drama", "Historický"};
+        Arrays.sort(zanry);
+        JComboBox<String> genresComboBox = new JComboBox<>(zanry);
 
         JLabel priceLabel = new JLabel("Cena (Kč)");
         JFormattedTextField priceField = new JFormattedTextField(createNumberFormatter());
@@ -35,9 +40,10 @@ public class AddBook extends JPanel {
 
         JLabel descriptionLabel = new JLabel("Popis:");
         JTextArea descriptionArea = new JTextArea(10, 20);
+        JScrollPane descriptionScrollPane = new JScrollPane(descriptionArea);
 
+        JButton submitButton = new JButton("Přidat knihu");
 
-        JButton submitButton = new JButton("Submit");
         submitButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 String name = nameField.getText();
@@ -58,33 +64,61 @@ public class AddBook extends JPanel {
             }
         });
 
-        // Přidání prvků do JPanelu
-        add(nameLabel);
-        add(nameField);
-        add(authorLabel);
-        add(authorComboBox);
-        add(genresLabel);
-        add(genresComboBox);
-        add(priceLabel);
-        add(priceField);
-        add(yearLabel);
-        add(yearField);
-        add(quantityLabel);
-        add(quantitySpinner);
-        add(descriptionLabel);
-        add(descriptionArea);
-        add(submitButton);
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        add(nameLabel, gbc);
 
-        setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5)); // Přidání paddingu mezi prvky a okrajem JPanelu
+        gbc.gridx = 1;
+        add(nameField, gbc);
 
-        // Nastavení preferované velikosti panelu
-        Dimension preferredSize = new Dimension(500, Integer.MAX_VALUE);
-        setPreferredSize(preferredSize);
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        add(authorLabel, gbc);
+
+        gbc.gridx = 1;
+        add(authorComboBox, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        add(genresLabel, gbc);
+
+        gbc.gridx = 1;
+        add(genresComboBox, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        add(priceLabel, gbc);
+
+        gbc.gridx = 1;
+        add(priceField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        add(yearLabel, gbc);
+
+        gbc.gridx = 1;
+        add(yearField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 5;
+        add(quantityLabel, gbc);
+
+        gbc.gridx = 1;
+        add(quantitySpinner, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 6;
+        add(descriptionLabel, gbc);
+
+        gbc.gridx = 1;
+        add(descriptionScrollPane, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 7;
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
+        add(submitButton, gbc);
     }
-
-    /**
-     * Vytvoří a vrátí formátovací objekt pro textové pole ceny, který povoluje pouze číselné hodnoty.
-     */
     private NumberFormatter createNumberFormatter() {
         NumberFormat format = NumberFormat.getNumberInstance();
         NumberFormatter formatter = new NumberFormatter(format);
