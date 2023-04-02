@@ -8,7 +8,7 @@ public class Main {
         JFrame frame = new JFrame("Book Manager");
 //        frame.setPreferredSize(new Dimension(600, 600));
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.add(new AddCustomer());
+        frame.add(new AddBook());
         frame.pack();
         frame.setVisible(true);
     }

@@ -6,6 +6,11 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 
@@ -55,6 +60,8 @@ public class AddCustomer extends JPanel {
         gbc.fill = GridBagConstraints.NONE;
         gbc.anchor = GridBagConstraints.CENTER;
         add(submitButton, gbc);
+
+
         submitButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -67,17 +74,22 @@ public class AddCustomer extends JPanel {
                     return;
                 }
 
-                Date currentDate = new Date();
-                if (selectedDate.compareTo(currentDate) >= 0) {
-                    System.out.println("Chyba: Vybrané datum je v budoucnosti.");
-                    return;
-                }
-
-                System.out.println(customerName);
                 // Format date as string
-                String dateStr = String.format("%1$td.%1$tm.%1$tY", selectedDate);
-                System.out.println(dateStr);
+                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+                String dateStr = format.format(selectedDate);
 
+                try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/java_winter", "root", "")) {
+                    String sql = "INSERT INTO zakaznik (jmeno, datum_narozeni) VALUES (?, ?)";
+                    PreparedStatement statement = conn.prepareStatement(sql);
+                    statement.setString(1, customerName);
+                    statement.setString(2, dateStr);
+                    int rowsInserted = statement.executeUpdate();
+                    if (rowsInserted > 0) {
+                        System.out.println("New customer inserted successfully!");
+                    }
+                } catch (SQLException ex) {
+                    System.out.println("Error inserting customer: " + ex.getMessage());
+                }
             }
         });
     }

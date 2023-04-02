@@ -5,9 +5,11 @@ import java.awt.*;
 import javax.swing.text.NumberFormatter;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.*;
 import java.text.NumberFormat;
 import java.util.Arrays;
-
+import java.util.HashMap;
+import java.util.Map;
 public class AddBook extends JPanel {
 
     public AddBook() {
@@ -20,7 +22,24 @@ public class AddBook extends JPanel {
         JTextField nameField = new JTextField(20);
 
         JLabel authorLabel = new JLabel("Autor");
-        JComboBox<String> authorComboBox = new JComboBox<>(new String[]{"Autor 1", "Autor 2", "Autor 3"});
+
+        JComboBox<String> authorComboBox = new JComboBox<>();
+
+        Map<String, Integer> authorIdMap = new HashMap<>(); // Map to store author names and their IDs
+
+        try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/java_winter", "root", "")) {
+            String sql = "SELECT id, jmeno FROM autor";
+            PreparedStatement statement = conn.prepareStatement(sql);
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                int id = resultSet.getInt("id");
+                String name = resultSet.getString("jmeno");
+                authorComboBox.addItem(name);
+                authorIdMap.put(name, id); // Store name and ID in the map
+            }
+        } catch (SQLException ex) {
+            System.out.println("Error loading authors: " + ex.getMessage());
+        }
 
         JLabel genresLabel = new JLabel("Žánr");
         String[] zanry = {"Sci-fi (vědeckofantastický)", "Romantika", "Thriller", "Detektivka", "Fantasy", "Horor", "Komedie", "Akční", "Drama", "Historický"};
@@ -54,8 +73,12 @@ public class AddBook extends JPanel {
                 int quantity = (int) quantitySpinner.getValue();
                 String description = descriptionArea.getText();
 
+                String authorName = (String) authorComboBox.getSelectedItem();
+                int authorId = authorIdMap.get(authorName);
+
                 System.out.println("Name: " + name);
                 System.out.println("Author: " + author);
+                System.out.println("Author ID: " + authorId);
                 System.out.println("Genre: " + genre);
                 System.out.println("Price: " + price);
                 System.out.println("Year: " + year);

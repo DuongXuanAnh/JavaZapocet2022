@@ -4,8 +4,10 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-
-
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 public class AddAuthor extends JPanel {
 
     public AddAuthor(){
@@ -22,7 +24,7 @@ public class AddAuthor extends JPanel {
 
         JLabel nationalLabel = new JLabel("Národnost");
         JComboBox<String> nationalComboBox = new JComboBox<>(
-                new String[]{"American", "British", "Canadian", "Czechia", "Chinese", "French", "German", "Indian", "Italian", "Japanese", "Mexican", "Russian", "Spanish",});
+                new String[]{"American", "British", "Canadian", "Czechia", "Chinese", "French", "German", "Indian", "Italian", "Japanese", "Mexican", "Russian", "Spanish","Vietnam"});
 
         JButton submitButton = new JButton("Přidat autora");
 
@@ -33,6 +35,18 @@ public class AddAuthor extends JPanel {
 
                 System.out.println("Name: " + name);
                 System.out.println("Národnost: " + national);
+
+                try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/java_winter?useSSL=false", "root", "");
+                     PreparedStatement statement = conn.prepareStatement("INSERT INTO autor (jmeno, narodnost) VALUES (?, ?)")) {
+                    statement.setString(1, name);
+                    statement.setString(2, national);
+                    int rowsInserted = statement.executeUpdate();
+                    if (rowsInserted > 0) {
+                        System.out.println("New author inserted successfully!");
+                    }
+                } catch (SQLException ex) {
+                    System.out.println("Error inserting author: " + ex.getMessage());
+                }
             }
         });
 
