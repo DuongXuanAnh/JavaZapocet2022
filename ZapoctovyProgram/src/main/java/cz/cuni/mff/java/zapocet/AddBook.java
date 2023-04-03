@@ -148,47 +148,78 @@ public class AddBook extends JPanel {
         JButton submitButton = new JButton("Přidat knihu");
 
         submitButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                String name = nameField.getText();
-                List<String> authorNames = new ArrayList<>();
-                for (JComboBox<String> authorComboBox : authorComboBoxes) {
-                    String authorName = (String) authorComboBox.getSelectedItem();
-                    authorNames.add(authorName);
-                }
-                String genre = (String) genresComboBox.getSelectedItem();
-                double price = ((Number) priceField.getValue()).doubleValue();
-                int year = ((Number) yearField.getValue()).intValue();
-                int quantity = (int) quantitySpinner.getValue();
-                String description = descriptionArea.getText();
+           public void actionPerformed(ActionEvent e) {
+               String name = nameField.getText();
+               List<String> authorNames = new ArrayList<>();
+               for (JComboBox<String> authorComboBox : authorComboBoxes) {
+                   String authorName = (String) authorComboBox.getSelectedItem();
+                   authorNames.add(authorName);
+               }
+               String genre = (String) genresComboBox.getSelectedItem();
+               double price = ((Number) priceField.getValue()).doubleValue();
+               int year = ((Number) yearField.getValue()).intValue();
+               int quantity = (int) quantitySpinner.getValue();
+               String description = descriptionArea.getText();
 
-                System.out.println("Name: " + name);
-                System.out.println("Authors: " + authorNames);
-                System.out.println("Genre: " + genre);
-                System.out.println("Price: " + price);
-                System.out.println("Year: " + year);
-                System.out.println("Quantity: " + quantity);
-                System.out.println("Description: " + description);
+               System.out.println("Name: " + name);
+               System.out.println("Authors: " + authorNames);
+               System.out.println("Genre: " + genre);
+               System.out.println("Price: " + price);
+               System.out.println("Year: " + year);
+               System.out.println("Quantity: " + quantity);
+               System.out.println("Description: " + description);
 
-                try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/java_winter?useSSL=false", "root", "");
-                     PreparedStatement insertStatement = conn.prepareStatement("INSERT INTO `kniha`(nazev, rok_vydani, cena, zanr, amount, popis) VALUES (?,?,?,?,?,?)")) {
+               // vložení nové knihy do tabulky kniha
+               try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/java_winter?useSSL=false", "root", "");
+                    PreparedStatement insertStatement = conn.prepareStatement("INSERT INTO `kniha`(nazev, rok_vydani, cena, zanr, amount, popis) VALUES (?,?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS)) {
 
-                    insertStatement.setString(1, name);
-                    insertStatement.setInt(2, year);
-                    insertStatement.setDouble(3, price);
-                    insertStatement.setString(4, genre);
-                    insertStatement.setInt(5, quantity);
-                    insertStatement.setString(6, description);
+                   insertStatement.setString(1, name);
+                   insertStatement.setInt(2, year);
+                   insertStatement.setDouble(3, price);
+                   insertStatement.setString(4, genre);
+                   insertStatement.setInt(5, quantity);
+                   insertStatement.setString(6, description);
 
-                    int rowsInserted = insertStatement.executeUpdate();
-                    if (rowsInserted > 0) {
-                        System.out.println("New book inserted successfully!");
-                    }
+                   int rowsInserted = insertStatement.executeUpdate();
 
-                } catch (SQLException ex) {
-                    System.out.println("Error inserting book: " + ex.getMessage());
-                }
-            }
-        });
+                   if (rowsInserted > 0) {
+                       System.out.println("New book inserted successfully!");
+
+                       // získání ID nové knihy
+
+                       ResultSet generatedKeys = insertStatement.getGeneratedKeys();
+                       if (generatedKeys.next()) {
+                           int bookId = generatedKeys.getInt(1);// vložení odpovídajících záznamů do tabulky kniha_autor
+                           for (String authorName : authorNames) {
+                               try (PreparedStatement authorIdStatement = conn.prepareStatement("SELECT id FROM `autor` WHERE jmeno = ?")) {
+                                   authorIdStatement.setString(1, authorName);
+                                   ResultSet authorIdResult = authorIdStatement.executeQuery();
+                                   if (authorIdResult.next()) {
+                                       int authorId = authorIdResult.getInt("id");
+                                       try (PreparedStatement bookAuthorInsertStatement = conn.prepareStatement("INSERT INTO kniha_autor(id_kniha, id_autor) VALUES (?,?)")) {
+                                           bookAuthorInsertStatement.setInt(1, bookId);
+                                           bookAuthorInsertStatement.setInt(2, authorId);
+                                           int bookAuthorRowsInserted = bookAuthorInsertStatement.executeUpdate();
+                                           if (bookAuthorRowsInserted > 0) {
+                                               System.out.println("New book_author record inserted successfully!");
+                                           }
+                                       } catch (SQLException ex) {
+                                           System.out.println("Error inserting book_author record: " + ex.getMessage());
+                                       }
+                                   } else {
+                                       System.out.println("Author not found: " + authorName);
+                                   }
+                               } catch (SQLException ex) {
+                                   System.out.println("Error getting author ID: " + ex.getMessage());
+                               }
+                           }
+                       }
+                   }
+               } catch (SQLException ex) {
+                   System.out.println("Error inserting book: " + ex.getMessage());
+               }
+           }
+       });
 
         gbc.gridx = 0;
         gbc.gridy = 0;
