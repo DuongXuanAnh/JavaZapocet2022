@@ -4,10 +4,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.sql.*;
+
 public class AddAuthor extends JPanel {
 
     public AddAuthor(){
@@ -33,19 +31,37 @@ public class AddAuthor extends JPanel {
                 String name = nameField.getText();
                 String national = (String) nationalComboBox.getSelectedItem();
 
-                System.out.println("Name: " + name);
-                System.out.println("Národnost: " + national);
+                if (name.length() < 4 || name.length() > 25) {
+                    // Show popup message if name is too short or too long
+                    JOptionPane.showMessageDialog(AddAuthor.this, "Jméno autora musí být dlouhé mezi 4 a 25 znaky.", "Chyba", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
 
                 try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/java_winter?useSSL=false", "root", "");
-                     PreparedStatement statement = conn.prepareStatement("INSERT INTO autor (jmeno, narodnost) VALUES (?, ?)")) {
-                    statement.setString(1, name);
-                    statement.setString(2, national);
-                    int rowsInserted = statement.executeUpdate();
-                    if (rowsInserted > 0) {
-                        System.out.println("New author inserted successfully!");
+                     PreparedStatement checkStatement = conn.prepareStatement("SELECT id, jmeno FROM autor WHERE jmeno = ?");
+                     PreparedStatement insertStatement = conn.prepareStatement("INSERT INTO autor (jmeno, narodnost) VALUES (?, ?)")) {
+                    // Check if the author already exists
+                    checkStatement.setString(1, name);
+                    ResultSet resultSet = checkStatement.executeQuery();
+
+                    if (resultSet.next()) {
+                        // Author already exists, show popup message
+                        JOptionPane.showMessageDialog(AddAuthor.this, "Autor " + name + " již už existuje.", "Autor již existuje", JOptionPane.WARNING_MESSAGE);
+                    } else {
+                        // Author doesn't exist, insert new author
+                        insertStatement.setString(1, name);
+                        insertStatement.setString(2, national);
+                        int rowsInserted = insertStatement.executeUpdate();
+                        if (rowsInserted > 0) {
+                            System.out.println("New author inserted successfully!");
+                            JOptionPane.showMessageDialog(AddAuthor.this, "Autor " + name + " byl úspěšně přidán", "successfully", JOptionPane.INFORMATION_MESSAGE);
+                        }
                     }
                 } catch (SQLException ex) {
                     System.out.println("Error inserting author: " + ex.getMessage());
+                    JOptionPane.showMessageDialog(AddAuthor.this, "Chyba", "Error", JOptionPane.ERROR_MESSAGE);
+
                 }
             }
         });

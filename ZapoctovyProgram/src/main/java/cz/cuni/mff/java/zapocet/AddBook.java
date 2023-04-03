@@ -168,6 +168,25 @@ public class AddBook extends JPanel {
                 System.out.println("Year: " + year);
                 System.out.println("Quantity: " + quantity);
                 System.out.println("Description: " + description);
+
+                try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/java_winter?useSSL=false", "root", "");
+                     PreparedStatement insertStatement = conn.prepareStatement("INSERT INTO `kniha`(nazev, rok_vydani, cena, zanr, amount, popis) VALUES (?,?,?,?,?,?)")) {
+
+                    insertStatement.setString(1, name);
+                    insertStatement.setInt(2, year);
+                    insertStatement.setDouble(3, price);
+                    insertStatement.setString(4, genre);
+                    insertStatement.setInt(5, quantity);
+                    insertStatement.setString(6, description);
+
+                    int rowsInserted = insertStatement.executeUpdate();
+                    if (rowsInserted > 0) {
+                        System.out.println("New book inserted successfully!");
+                    }
+
+                } catch (SQLException ex) {
+                    System.out.println("Error inserting book: " + ex.getMessage());
+                }
             }
         });
 
