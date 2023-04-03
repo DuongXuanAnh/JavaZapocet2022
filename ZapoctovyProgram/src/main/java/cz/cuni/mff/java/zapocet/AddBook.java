@@ -2,16 +2,20 @@ package cz.cuni.mff.java.zapocet;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import javax.swing.text.NumberFormatter;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.*;
 import java.text.NumberFormat;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-public class AddBook extends JPanel {
 
+public class AddBook extends JPanel {
+    private List<JComboBox<String>> authorComboBoxes;
+    int positionCombobox = 2;
     public AddBook() {
         setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
@@ -61,24 +65,67 @@ public class AddBook extends JPanel {
         JTextArea descriptionArea = new JTextArea(10, 20);
         JScrollPane descriptionScrollPane = new JScrollPane(descriptionArea);
 
+        JButton addAuthorButton = new JButton("Přidat autora");
+        gbc.gridx = 2;
+        gbc.gridy = 1;
+        add(addAuthorButton, gbc);
+
+        addAuthorButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Create and populate the new combo box with author names
+                JComboBox<String> newAuthorComboBox = new JComboBox<>();
+
+                try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/java_winter", "root", "")) {
+                    String sql = "SELECT id, jmeno FROM autor";
+                    PreparedStatement statement = conn.prepareStatement(sql);
+                    ResultSet resultSet = statement.executeQuery();
+                    while (resultSet.next()) {
+                        int id = resultSet.getInt("id");
+                        String name = resultSet.getString("jmeno");
+                        newAuthorComboBox.addItem(name);
+                    }
+                } catch (SQLException ex) {
+                    System.out.println("Error loading authors: " + ex.getMessage());
+                }
+
+                // Add the new combo box to the panel and to the list
+                authorComboBoxes.add(newAuthorComboBox);
+                gbc.gridx = 1;
+                gbc.gridy = positionCombobox;
+                add(newAuthorComboBox, gbc);
+                positionCombobox++;
+                // Update the layout
+                revalidate();
+                // Find the top-level container of the current component (e.g., JFrame)
+                Window topLevelContainer = SwingUtilities.getWindowAncestor(AddBook.this);
+            // Repack the top-level container to adjust its size
+                            if (topLevelContainer instanceof JFrame) {
+                                ((JFrame) topLevelContainer).pack();
+                            }
+            // Repaint the entire GUI
+                            topLevelContainer.repaint();
+                }
+        });
+
         JButton submitButton = new JButton("Přidat knihu");
 
         submitButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 String name = nameField.getText();
-                String author = (String) authorComboBox.getSelectedItem();
+                List<String> authorNames = new ArrayList<>();
+                for (JComboBox<String> authorComboBox : authorComboBoxes) {
+                    String authorName = (String) authorComboBox.getSelectedItem();
+                    authorNames.add(authorName);
+                }
                 String genre = (String) genresComboBox.getSelectedItem();
                 double price = ((Number) priceField.getValue()).doubleValue();
                 int year = ((Number) yearField.getValue()).intValue();
                 int quantity = (int) quantitySpinner.getValue();
                 String description = descriptionArea.getText();
 
-                String authorName = (String) authorComboBox.getSelectedItem();
-                int authorId = authorIdMap.get(authorName);
-
                 System.out.println("Name: " + name);
-                System.out.println("Author: " + author);
-                System.out.println("Author ID: " + authorId);
+                System.out.println("Authors: " + authorNames);
                 System.out.println("Genre: " + genre);
                 System.out.println("Price: " + price);
                 System.out.println("Year: " + year);
@@ -102,46 +149,50 @@ public class AddBook extends JPanel {
         add(authorComboBox, gbc);
 
         gbc.gridx = 0;
-        gbc.gridy = 2;
+        gbc.gridy = positionCombobox + 5;
         add(genresLabel, gbc);
 
         gbc.gridx = 1;
         add(genresComboBox, gbc);
 
         gbc.gridx = 0;
-        gbc.gridy = 3;
+        gbc.gridy = positionCombobox + 6;
         add(priceLabel, gbc);
 
         gbc.gridx = 1;
         add(priceField, gbc);
 
         gbc.gridx = 0;
-        gbc.gridy = 4;
+        gbc.gridy = positionCombobox + 7;
         add(yearLabel, gbc);
 
         gbc.gridx = 1;
         add(yearField, gbc);
 
         gbc.gridx = 0;
-        gbc.gridy = 5;
+        gbc.gridy = positionCombobox + 8;
         add(quantityLabel, gbc);
 
         gbc.gridx = 1;
         add(quantitySpinner, gbc);
 
         gbc.gridx = 0;
-        gbc.gridy = 6;
+        gbc.gridy = positionCombobox + 9;
         add(descriptionLabel, gbc);
 
         gbc.gridx = 1;
         add(descriptionScrollPane, gbc);
 
         gbc.gridx = 0;
-        gbc.gridy = 7;
+        gbc.gridy = positionCombobox + 10;
         gbc.gridwidth = 2;
         gbc.anchor = GridBagConstraints.CENTER;
         add(submitButton, gbc);
+
+        authorComboBoxes = new ArrayList<>();
+        authorComboBoxes.add(authorComboBox);
     }
+
     private NumberFormatter createNumberFormatter() {
         NumberFormat format = NumberFormat.getNumberInstance();
         NumberFormatter formatter = new NumberFormatter(format);
