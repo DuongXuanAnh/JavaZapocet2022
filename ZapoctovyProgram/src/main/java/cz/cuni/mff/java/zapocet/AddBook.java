@@ -70,6 +70,9 @@ public class AddBook extends JPanel {
         gbc.gridy = 1;
         add(addAuthorButton, gbc);
 
+        // Create a new list to store the "Remove" buttons
+        List<JButton> removeAuthorButtons = new ArrayList<>();
+
         addAuthorButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -89,23 +92,57 @@ public class AddBook extends JPanel {
                     System.out.println("Error loading authors: " + ex.getMessage());
                 }
 
-                // Add the new combo box to the panel and to the list
+                // Create the "Remove" button for the new combo box
+                JButton removeAuthorButton = new JButton("X");
+
+                // Add an ActionListener to the "Remove" button
+                removeAuthorButton.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        // Remove the combo box and the "Remove" button from the panel
+                        remove(newAuthorComboBox);
+                        remove(removeAuthorButton);
+
+                        // Update the layout
+                        revalidate();
+
+                        // Find the top-level container of the current component (e.g., JFrame)
+                        Window topLevelContainer = SwingUtilities.getWindowAncestor(AddBook.this);
+
+                        // Repack the top-level container to adjust its size
+                        if (topLevelContainer instanceof JFrame) {
+                            ((JFrame) topLevelContainer).pack();
+                        }
+
+                        // Repaint the entire GUI
+                        topLevelContainer.repaint();
+                    }
+                });
+
+                // Add the new combo box and the "Remove" button to the panel and to the list
                 authorComboBoxes.add(newAuthorComboBox);
+                removeAuthorButtons.add(removeAuthorButton);
                 gbc.gridx = 1;
                 gbc.gridy = positionCombobox;
                 add(newAuthorComboBox, gbc);
+                gbc.gridx = 3;
+                add(removeAuthorButton, gbc);
                 positionCombobox++;
+
                 // Update the layout
                 revalidate();
+
                 // Find the top-level container of the current component (e.g., JFrame)
                 Window topLevelContainer = SwingUtilities.getWindowAncestor(AddBook.this);
-            // Repack the top-level container to adjust its size
-                            if (topLevelContainer instanceof JFrame) {
-                                ((JFrame) topLevelContainer).pack();
-                            }
-            // Repaint the entire GUI
-                            topLevelContainer.repaint();
+
+                // Repack the top-level container to adjust its size
+                if (topLevelContainer instanceof JFrame) {
+                    ((JFrame) topLevelContainer).pack();
                 }
+
+                // Repaint the entire GUI
+                topLevelContainer.repaint();
+            }
         });
 
         JButton submitButton = new JButton("Přidat knihu");
@@ -152,6 +189,12 @@ public class AddBook extends JPanel {
         gbc.gridy = positionCombobox + 5;
         add(genresLabel, gbc);
 
+        gbc.gridx = 1;
+        add(genresComboBox, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = positionCombobox + 5;
+        add(genresLabel, gbc);
         gbc.gridx = 1;
         add(genresComboBox, gbc);
 
