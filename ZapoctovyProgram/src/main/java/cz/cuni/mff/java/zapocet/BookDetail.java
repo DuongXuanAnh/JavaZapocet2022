@@ -44,7 +44,7 @@ public class BookDetail extends JPanel {
         add(searchField, BorderLayout.NORTH);
 
         // Create the table model and table
-        String[] columnNames = {"ID", "Název", "Cena"};
+        String[] columnNames = {"ID", "Název", "Počet kusů", "Cena"};
         tableModel = new DefaultTableModel(columnNames, 0);
         resultsTable = new JTable(tableModel);
         resultsTable.setDefaultEditor(Object.class, null); // Disable cell editing
@@ -103,7 +103,9 @@ public class BookDetail extends JPanel {
                     }
                     int id = (int) resultsTable.getValueAt(row, 0);
                     String title = (String) resultsTable.getValueAt(row, 1);
-                    double price = (double) resultsTable.getValueAt(row, 2);
+                    String priceAsString = resultsTable.getValueAt(row, 2).toString();
+                    double price = Double.parseDouble(priceAsString);
+
                     updateBook(id, title, price);
                     resultsTable.setDefaultEditor(Object.class, null);
                     updateButton.setEnabled(false);
@@ -127,7 +129,7 @@ public class BookDetail extends JPanel {
 
     private void updateTableModel() {
         String query = searchField.getText();
-        String sql = "SELECT id, nazev, cena FROM kniha WHERE nazev LIKE '%" + query + "%'";
+        String sql = "SELECT id, nazev, amount, cena FROM kniha WHERE nazev LIKE '%" + query + "%'";
         try {
             PreparedStatement statement = connection.prepareStatement(sql);
             ResultSet resultSet = statement.executeQuery();
@@ -135,8 +137,9 @@ public class BookDetail extends JPanel {
             while (resultSet.next()) {
                 int id = resultSet.getInt("id");
                 String title = resultSet.getString("nazev");
+                int amount = resultSet.getInt("amount");
                 double price = resultSet.getDouble("cena");
-                tableModel.addRow(new Object[]{id, title, price});
+                tableModel.addRow(new Object[]{id, title, amount, price});
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -152,18 +155,31 @@ public class BookDetail extends JPanel {
 
             if (resultSet.next()) {
                 String title = resultSet.getString("nazev");
+                int year = resultSet.getInt("rok_vydani");
                 double price = resultSet.getDouble("cena");
+                String genre = resultSet.getString("zanr");
+                int amount = resultSet.getInt("amount");
                 String description = resultSet.getString("popis");
 
                 JTextField titleField = new JTextField(title);
+                JTextField yearField = new JTextField(String.valueOf(year));
                 JTextField priceField = new JTextField(String.valueOf(price));
+                JComboBox<String> genreComboBox = new JComboBox<>(new String[]{"Sci-fi (vědeckofantastický)", "Romantika", "Thriller", "Detektivka", "Fantasy", "Horor", "Komedie", "Akční", "Drama", "Historický"}); // Add your genres here
+                genreComboBox.setSelectedItem(genre);
+                JTextField amountField = new JTextField(String.valueOf(amount));
                 JTextArea descriptionArea = new JTextArea(description);
 
                 JPanel panel = new JPanel(new GridLayout(0, 1));
                 panel.add(new JLabel("Název:"));
                 panel.add(titleField);
+                panel.add(new JLabel("Rok vydání:"));
+                panel.add(yearField);
                 panel.add(new JLabel("Cena:"));
                 panel.add(priceField);
+                panel.add(new JLabel("Žánr:"));
+                panel.add(genreComboBox);
+                panel.add(new JLabel("Množství:"));
+                panel.add(amountField);
                 panel.add(new JLabel("Popis:"));
                 panel.add(new JScrollPane(descriptionArea));
 
@@ -171,16 +187,21 @@ public class BookDetail extends JPanel {
 
                 if (result == JOptionPane.OK_OPTION) {
                     String updatedTitle = titleField.getText();
+                    int updatedYear = Integer.parseInt(yearField.getText());
                     double updatedPrice = Double.parseDouble(priceField.getText());
+                    String updatedGenre = (String) genreComboBox.getSelectedItem();
+                    int updatedAmount = Integer.parseInt(amountField.getText());
                     String updatedDescription = descriptionArea.getText();
 
-                    // Include the popis parameter in the query
-                    String updateSql = "UPDATE kniha SET nazev=?, cena=?, popis=? WHERE id=?";
+                    String updateSql = "UPDATE kniha SET nazev=?, rok_vydani=?, cena=?, zanr=?, amount=?, popis=? WHERE id=?";
                     PreparedStatement updateStatement = connection.prepareStatement(updateSql);
                     updateStatement.setString(1, updatedTitle);
-                    updateStatement.setDouble(2, updatedPrice);
-                    updateStatement.setString(3, updatedDescription); // Set the popis parameter
-                    updateStatement.setInt(4, id);
+                    updateStatement.setInt(2, updatedYear);
+                    updateStatement.setDouble(3, updatedPrice);
+                    updateStatement.setString(4, updatedGenre);
+                    updateStatement.setInt(5, updatedAmount);
+                    updateStatement.setString(6, updatedDescription);
+                    updateStatement.setInt(7, id);
                     updateStatement.executeUpdate();
 
                     updateTableModel();
@@ -192,9 +213,6 @@ public class BookDetail extends JPanel {
     }
 
     private void updateBook(int id, String title, double price) {
-        System.out.println(id);
-        System.out.println(title);
-        System.out.println(price);
         String sql = "UPDATE kniha SET nazev=?, cena=? WHERE id=?";
         try {
             PreparedStatement statement = connection.prepareStatement(sql);
