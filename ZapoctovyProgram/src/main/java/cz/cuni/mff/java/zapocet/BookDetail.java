@@ -10,6 +10,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.sql.*;
+import java.util.HashMap;
+import java.util.Map;
 
 public class BookDetail extends JPanel {
     private JTextField searchField;
@@ -18,6 +20,9 @@ public class BookDetail extends JPanel {
     private Connection connection;
     private JButton editButton;
     private JButton updateButton;
+
+    private JComboBox<String> allAuthorsComboBox;
+    Map<String, Integer> authorIdMap;
 
     public BookDetail() {
         setLayout(new BorderLayout());
@@ -89,6 +94,7 @@ public class BookDetail extends JPanel {
                 }
             }
         });
+
         buttonPanel.add(editButton);
 
         updateButton = new JButton("Update");
@@ -146,13 +152,41 @@ public class BookDetail extends JPanel {
         }
     }
 
+    private JComboBox<String> createAllAuthorsComboBox(int defaultAuthorId){
+        allAuthorsComboBox = new JComboBox<>();
+        authorIdMap = new HashMap<>();
+        try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/java_winter", "root", "")) {
+            String sql = "SELECT id, jmeno FROM autor";
+            PreparedStatement statement = conn.prepareStatement(sql);
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                int id = resultSet.getInt("id");
+                String name = resultSet.getString("jmeno");
+                allAuthorsComboBox.addItem(name);
+                authorIdMap.put(name, id); // Store name and ID in the map
+                if (id == defaultAuthorId) {
+                    allAuthorsComboBox.setSelectedItem(name);
+                }
+            }
+        } catch (SQLException ex) {
+            System.out.println("Error loading authors: " + ex.getMessage());
+        }
+
+
+        return allAuthorsComboBox;
+    }
+
     private void showBookDetail(int id) {
         try {
-            String sql = "SELECT * FROM kniha WHERE id=?";
+            String sql = "SELECT * \n" +
+                         "FROM kniha \n" +
+                         "JOIN kniha_autor \n" +
+                         "ON kniha_autor.id_kniha = kniha.id\n" +
+                         "JOIN autor ON autor.id = kniha_autor.id_autor\n" +
+                         "WHERE kniha.id = ?";
             PreparedStatement statement = connection.prepareStatement(sql);
             statement.setInt(1, id);
             ResultSet resultSet = statement.executeQuery();
-
             if (resultSet.next()) {
                 String title = resultSet.getString("nazev");
                 int year = resultSet.getInt("rok_vydani");
@@ -172,16 +206,29 @@ public class BookDetail extends JPanel {
                 JPanel panel = new JPanel(new GridLayout(0, 1));
                 panel.add(new JLabel("Název:"));
                 panel.add(titleField);
+                panel.add(new JLabel("Žánr:"));
+                panel.add(genreComboBox);
                 panel.add(new JLabel("Rok vydání:"));
                 panel.add(yearField);
                 panel.add(new JLabel("Cena:"));
                 panel.add(priceField);
-                panel.add(new JLabel("Žánr:"));
-                panel.add(genreComboBox);
                 panel.add(new JLabel("Množství:"));
                 panel.add(amountField);
                 panel.add(new JLabel("Popis:"));
                 panel.add(new JScrollPane(descriptionArea));
+                panel.add(new JLabel("Autor:"));
+
+//                ------------------------------------------------------------------------------------
+
+                panel.add(createAllAuthorsComboBox(resultSet.getInt("autor.id")));
+
+                while(resultSet.next()){
+                    panel.add(createAllAuthorsComboBox(resultSet.getInt("autor.id")));
+                }
+
+                JButton addAuthorButton = new JButton("Přidat autora");
+                panel.add(addAuthorButton);
+
 
                 int result = JOptionPane.showConfirmDialog(null, panel, "Detail knihy", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
