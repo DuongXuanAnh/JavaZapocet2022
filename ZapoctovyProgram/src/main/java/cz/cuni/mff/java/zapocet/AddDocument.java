@@ -6,16 +6,19 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.*;
 import java.util.Date;
 
 public class AddDocument extends JPanel {
+
+    int positionCombobox = 4;
     public AddDocument() {
         setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        JLabel title = new JLabel("Vytvořit doklad");
+        JLabel title = new JLabel("Vytvořit objednávku");
         title.setFont(new Font("Serif", Font.BOLD, 20));
 
         JLabel typeLabel = new JLabel("Typ:");
@@ -25,9 +28,7 @@ public class AddDocument extends JPanel {
         JDateChooser dateChooser = new JDateChooser();
         dateChooser.setDateFormatString("dd.MM.yyyy");
 
-        JLabel priceLabel = new JLabel("Cena (Kč):");
-        JFormattedTextField priceField = new JFormattedTextField();
-        priceField.setValue(0);
+
 
         gbc.gridx = 0;
         gbc.gridy = 0;
@@ -51,16 +52,51 @@ public class AddDocument extends JPanel {
         gbc.gridx = 1;
         add(dateChooser, gbc);
 
+
+        JButton chooseBookButton = new JButton("Vybrat knihu");
         gbc.gridx = 0;
         gbc.gridy = 3;
-        add(priceLabel, gbc);
+        add(chooseBookButton, gbc);
 
-        gbc.gridx = 1;
-        add(priceField, gbc);
+        chooseBookButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JComboBox<String> bookComboBox = new JComboBox<>();
+
+                gbc.gridx = 0;
+                gbc.gridy = positionCombobox;
+                add(bookComboBox, gbc);
+
+                try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/java_winter", "root", "")) {
+                    String sql = "SELECT id, nazev, cena FROM kniha";
+                    PreparedStatement statement = conn.prepareStatement(sql);
+                    ResultSet resultSet = statement.executeQuery();
+                    while (resultSet.next()) {
+                        String name = resultSet.getString("nazev");
+                        double cena = resultSet.getDouble("cena");
+
+                        bookComboBox.addItem(name + " (cena: " + cena + ")");
+                    }
+                } catch (SQLException ex) {
+                    System.out.println("Error loading books: " + ex.getMessage());
+                }
+
+                positionCombobox++;
+                // Find the top-level container of the current component (e.g., JFrame)
+                Window topLevelContainer = SwingUtilities.getWindowAncestor(AddDocument.this);
+                // Repack the top-level container to adjust its size
+                if (topLevelContainer instanceof JFrame) {
+                    ((JFrame) topLevelContainer).pack();
+                }
+                // Repaint the entire GUI
+                topLevelContainer.repaint();
+            }
+        });
+
 
         JButton submitButton = new JButton("Přidat doklad");
-        gbc.gridx = 1;
-        gbc.gridy = 4;
+        gbc.gridx = 0;
+        gbc.gridy = 100;
         gbc.fill = GridBagConstraints.NONE;
         gbc.anchor = GridBagConstraints.CENTER;
         add(submitButton, gbc);
@@ -70,24 +106,10 @@ public class AddDocument extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 String type = (String) typeComboBox.getSelectedItem();
                 Date selectedDate = dateChooser.getDate();
-                String price = priceField.getText();
-
-                // Check if date is null
-                if (selectedDate == null) {
-                    System.out.println("Chyba: Datum nebyl vybrán.");
-                    return;
-                }
-
-                Date currentDate = new Date();
-                if (selectedDate.compareTo(currentDate) <= 0) {
-                    System.out.println("Chyba: Vybrané datum je v minulosti.");
-                    return;
-                }
 
                 // Format date as string
                 String dateStr = String.format("%1$td.%1$tm.%1$tY", selectedDate);
-
-                System.out.println((String.format("Typ: %s, Datum: %s, Cena: %s", type, dateStr, price)));
+                System.out.println(dateStr);
             }
         });
     }
