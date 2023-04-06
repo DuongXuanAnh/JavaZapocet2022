@@ -9,6 +9,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
@@ -20,6 +22,8 @@ public class BookDetail extends JPanel {
     private Connection connection;
     private JButton editButton;
     private JButton updateButton;
+
+    private JButton addBookToDocumentButton;
 
     private JComboBox<String> allAuthorsComboBox;
     Map<String, Integer> authorIdMap;
@@ -116,12 +120,31 @@ public class BookDetail extends JPanel {
                     resultsTable.setDefaultEditor(Object.class, null);
                     updateButton.setEnabled(false);
 
-                    // Refresh the table with updated values
-//                    updateTableModel();
                 }
             }
         });
         buttonPanel.add(updateButton);
+
+        add(buttonPanel, BorderLayout.SOUTH);
+
+
+        addBookToDocumentButton = new JButton("Přidat do košíku");
+        addBookToDocumentButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int row = resultsTable.getSelectedRow();
+                if (row != -1) {
+
+                    if (resultsTable.getCellEditor() != null) {
+                        resultsTable.getCellEditor().stopCellEditing();
+                    }
+
+                    int id = (int) resultsTable.getValueAt(row, 0);
+                    addBookToDocument(id);
+                }
+            }
+        });
+        buttonPanel.add(addBookToDocumentButton);
 
         add(buttonPanel, BorderLayout.SOUTH);
 
@@ -229,7 +252,6 @@ public class BookDetail extends JPanel {
                 JButton addAuthorButton = new JButton("Přidat autora");
                 panel.add(addAuthorButton);
 
-
                 int result = JOptionPane.showConfirmDialog(null, panel, "Detail knihy", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
                 if (result == JOptionPane.OK_OPTION) {
@@ -275,4 +297,21 @@ public class BookDetail extends JPanel {
         }
     }
 
+    private void addBookToDocument(int id){
+        String fileName = "OrderBooks.txt";
+        String content = id + "";
+        try {
+            FileWriter fileWriter = new FileWriter(fileName, true);
+            fileWriter.write(System.lineSeparator()); // add a new line separator
+            fileWriter.write(content);
+            fileWriter.close();
+            System.out.println("Successfully appended to the file.");
+            String message = "Kniha byla přidána do košíku!";
+            String title = "Info";
+            JOptionPane.showMessageDialog(null, message, title, JOptionPane.INFORMATION_MESSAGE);
+        } catch (IOException e) {
+            System.out.println("An error occurred.");
+            e.printStackTrace();
+        }
+    }
 }
