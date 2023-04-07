@@ -6,7 +6,11 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.sql.*;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 
 public class AddDocument extends JPanel {
@@ -28,7 +32,17 @@ public class AddDocument extends JPanel {
         JDateChooser dateChooser = new JDateChooser();
         dateChooser.setDateFormatString("dd.MM.yyyy");
 
-
+        typeComboBox.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String selectedOption = (String) typeComboBox.getSelectedItem();
+                if (selectedOption.equals("Koupit")) {
+                    dateChooser.setVisible(false);
+                } else {
+                    dateChooser.setVisible(true);
+                }
+            }
+        });
 
         gbc.gridx = 0;
         gbc.gridy = 0;
@@ -52,47 +66,56 @@ public class AddDocument extends JPanel {
         gbc.gridx = 1;
         add(dateChooser, gbc);
 
-
-        JButton chooseBookButton = new JButton("Vybrat knihu");
+        JLabel customerIDLabel = new JLabel("ID zákaznika:");
         gbc.gridx = 0;
         gbc.gridy = 3;
-        add(chooseBookButton, gbc);
+        add(customerIDLabel, gbc);
 
-        chooseBookButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                JComboBox<String> bookComboBox = new JComboBox<>();
+        JTextField customerIDTextField = new JTextField();
+        gbc.gridx = 1;
+        gbc.gridy = 3;
+        add(customerIDTextField, gbc);
 
-                gbc.gridx = 0;
-                gbc.gridy = positionCombobox;
-                add(bookComboBox, gbc);
+        customerIDTextField.addKeyListener(new KeyAdapter() {
+            JLabel customerName = new JLabel("");
+            public void keyPressed(KeyEvent event) {
+                if (event.getKeyCode() == KeyEvent.VK_ENTER) {
+                    // Get the text entered by the user and display it
+                    String idString = customerIDTextField.getText();
 
-                try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/java_winter", "root", "")) {
-                    String sql = "SELECT id, nazev, cena FROM kniha";
-                    PreparedStatement statement = conn.prepareStatement(sql);
-                    ResultSet resultSet = statement.executeQuery();
-                    while (resultSet.next()) {
-                        String name = resultSet.getString("nazev");
-                        double cena = resultSet.getDouble("cena");
+                    try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/java_winter", "root", "")) {
+                        String sql = "SELECT id, jmeno, datum_narozeni FROM zakaznik";
+                        PreparedStatement statement = conn.prepareStatement(sql);
+                        ResultSet resultSet = statement.executeQuery();
+                        String name = "Not found";
+                        String datumNarozeni = "";
+                        while (resultSet.next()) {
+                            int id = resultSet.getInt("id");
 
-                        bookComboBox.addItem(name + " (cena: " + cena + ")");
+                            if(id == Integer.parseInt(idString)){
+                                name = resultSet.getString("jmeno");
+                                String dateString = resultSet.getString("datum_narozeni");
+                                DateTimeFormatter originalFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                                DateTimeFormatter targetFormat = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+                                LocalDate date = LocalDate.parse(dateString, originalFormat);
+                                datumNarozeni = date.format(targetFormat);
+                                break;
+                            }
+                        }
+
+                        customerName.setText(name.equals("Not found") ? name : name + " (" + datumNarozeni + ")");
+                        gbc.gridx = 0;
+                        gbc.gridy = 4;
+                        add(customerName, gbc);
+                        refreshWindow();
+
+                    } catch (SQLException ex) {
+                        System.out.println("Error loading books: " + ex.getMessage());
                     }
-                } catch (SQLException ex) {
-                    System.out.println("Error loading books: " + ex.getMessage());
-                }
 
-                positionCombobox++;
-                // Find the top-level container of the current component (e.g., JFrame)
-                Window topLevelContainer = SwingUtilities.getWindowAncestor(AddDocument.this);
-                // Repack the top-level container to adjust its size
-                if (topLevelContainer instanceof JFrame) {
-                    ((JFrame) topLevelContainer).pack();
                 }
-                // Repaint the entire GUI
-                topLevelContainer.repaint();
             }
         });
-
 
         JButton submitButton = new JButton("Přidat doklad");
         gbc.gridx = 0;
@@ -113,4 +136,24 @@ public class AddDocument extends JPanel {
             }
         });
     }
+
+    private void refreshWindow() {
+        // Update the layout
+        revalidate();
+
+        // Find the top-level container of the current component (e.g., JFrame)
+        Window topLevelContainer = SwingUtilities.getWindowAncestor(AddDocument.this);
+
+        // Repack the top-level container to adjust its size
+        if (topLevelContainer instanceof JFrame) {
+            ((JFrame) topLevelContainer).pack();
+        }
+
+        // Repaint the entire GUI
+        topLevelContainer.repaint();
+    }
+
+
+
+
 }
