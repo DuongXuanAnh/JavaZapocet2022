@@ -3,19 +3,32 @@ package cz.cuni.mff.java.zapocet;
 import com.toedter.calendar.JDateChooser;
 
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.io.*;
 import java.sql.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 public class AddDocument extends JPanel {
 
-    int positionCombobox = 4;
+    JLabel totalDocumentPriceLabel = new JLabel("");
+    double totalDocumentPrice = 0;
+
+    ArrayList<Integer> chosenBookID = new ArrayList<>();
+
+    ArrayList<Double> bookPrice = new ArrayList<>();
+    ArrayList<Integer> bookQuantity = new ArrayList<>();
+
     public AddDocument() {
         setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
@@ -36,11 +49,7 @@ public class AddDocument extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String selectedOption = (String) typeComboBox.getSelectedItem();
-                if (selectedOption.equals("Koupit")) {
-                    dateChooser.setVisible(false);
-                } else {
-                    dateChooser.setVisible(true);
-                }
+                dateChooser.setVisible(!selectedOption.equals("Koupit"));
             }
         });
 
@@ -78,6 +87,7 @@ public class AddDocument extends JPanel {
 
         customerIDTextField.addKeyListener(new KeyAdapter() {
             JLabel customerName = new JLabel("");
+
             public void keyPressed(KeyEvent event) {
                 if (event.getKeyCode() == KeyEvent.VK_ENTER) {
                     // Get the text entered by the user and display it
@@ -89,10 +99,11 @@ public class AddDocument extends JPanel {
                         ResultSet resultSet = statement.executeQuery();
                         String name = "Not found";
                         String datumNarozeni = "";
+
                         while (resultSet.next()) {
                             int id = resultSet.getInt("id");
 
-                            if(id == Integer.parseInt(idString)){
+                            if (id == Integer.parseInt(idString)) {
                                 name = resultSet.getString("jmeno");
                                 String dateString = resultSet.getString("datum_narozeni");
                                 DateTimeFormatter originalFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -116,6 +127,84 @@ public class AddDocument extends JPanel {
                 }
             }
         });
+
+        JLabel chosenBooks = new JLabel("Vybrané knihy:");
+        gbc.gridx = 0;
+        gbc.gridy = 5;
+        add(chosenBooks, gbc);
+
+        ReadOrderFile();
+
+        String sql = "SELECT * FROM kniha WHERE id IN (";
+        for (int i = 0; i < chosenBookID.size(); i++) {
+            sql += "?";
+            if (i < chosenBookID.size() - 1) {
+                sql += ",";
+            }
+        }
+        sql += ")";
+
+        try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/java_winter", "root", "");
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            for (int i = 0; i < chosenBookID.size(); i++) {
+                stmt.setInt(i + 1, chosenBookID.get(i));
+            }
+            ResultSet rs = stmt.executeQuery();
+
+            // Vytvoření Mapy pro mapování Spinneru na cenu knihy
+            Map<JSpinner, Integer> spinnerPriceMap = new HashMap<>();
+
+            int position = 6;
+            while (rs.next()) {
+                int id = rs.getInt("id");
+                String nazev = rs.getString("nazev");
+                int amount = rs.getInt("amount");
+                double cena = rs.getDouble("cena");
+
+                totalDocumentPrice += cena;
+
+                JLabel chosenBook = new JLabel("* " + nazev + " - " + cena + "Kč");
+                gbc.gridx = 0;
+                gbc.gridy = position;
+                add(chosenBook, gbc);
+                SpinnerModel model = new SpinnerNumberModel(1, 0, amount, 1);
+                JSpinner spinner = new JSpinner(model);
+                spinnerPriceMap.put(spinner, id);
+
+                // Přidání listeneru pro změny hodnoty v Spinneru
+                spinner.addChangeListener(new ChangeListener() {
+                    public void stateChanged(ChangeEvent e) {
+                        // Získání hodnoty ze Spinneru
+                        int value = (int) spinner.getValue();
+
+                        int id = spinnerPriceMap.get(spinner);
+
+                        updateQuantityInFile(id, value);
+                        totalDocumentPrice = getUpdateTotalDocumentPrice();
+//                        System.out.println(totalDocumentPrice + "XA");
+                        totalDocumentPriceLabel.setText(totalDocumentPrice + "");
+                        refreshWindow();
+                    }
+                });
+
+                gbc.gridx = 1;
+                gbc.gridy = position;
+                add(spinner, gbc);
+                position++;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+
+        JLabel celkemLabel = new JLabel("Celkem: ");
+        gbc.gridx = 0;
+        gbc.gridy = 99;
+        add(celkemLabel, gbc);
+        totalDocumentPriceLabel.setText(totalDocumentPrice + " Kč");
+        gbc.gridx = 1;
+        gbc.gridy = 99;
+        add(totalDocumentPriceLabel, gbc);
 
         JButton submitButton = new JButton("Přidat doklad");
         gbc.gridx = 0;
@@ -153,7 +242,41 @@ public class AddDocument extends JPanel {
         topLevelContainer.repaint();
     }
 
+    private void ReadOrderFile() {
+        String filePath = "OrderBooks.txt";
 
+        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+            String line;
 
+            while ((line = br.readLine()) != null) {
+                if (!line.isEmpty()) {
+                    chosenBookID.add(Integer.parseInt(line.split(" ")[0]));
+                    bookPrice.add(Double.parseDouble(line.split(" ") [1]));
+                    bookQuantity.add(Integer.parseInt(line.split(" ")[2]));
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
+    }
+
+    private void updateQuantityInFile(int id, int value) {
+        System.out.println(id);
+        for(int i = 0; i < chosenBookID.size(); i++){
+            if(chosenBookID.get(i) == id){
+                bookQuantity.set(i, value);
+            }
+        }
+    }
+
+    private double getUpdateTotalDocumentPrice(){
+        double temp = 0;
+
+        for(int i = 0; i < chosenBookID.size(); i++){
+            temp += bookPrice.get(i) * bookQuantity.get(i);
+        }
+
+        return temp;
+    }
 }

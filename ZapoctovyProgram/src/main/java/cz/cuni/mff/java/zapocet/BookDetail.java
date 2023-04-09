@@ -140,7 +140,8 @@ public class BookDetail extends JPanel {
                     }
 
                     int id = (int) resultsTable.getValueAt(row, 0);
-                    addBookToDocument(id);
+                    double price = (double) resultsTable.getValueAt(row, 3);
+                    addBookToDocument(id, price);
                 }
             }
         });
@@ -297,9 +298,9 @@ public class BookDetail extends JPanel {
         }
     }
 
-    private void addBookToDocument(int id){
+    private void addBookToDocument(int id, double price){
         String fileName = "OrderBooks.txt";
-        String content = id + "";
+        String content = id + " " + price + " " + 1;
         try {
             FileWriter fileWriter = new FileWriter(fileName, true);
             fileWriter.write(System.lineSeparator()); // add a new line separator
