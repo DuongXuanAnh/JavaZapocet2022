@@ -239,6 +239,9 @@ public class AddDocument extends JPanel {
                         insertDocumentItems(dokladId);
                         insertDocumentCustomer(dokladId, customerID);
                     }
+
+                    showSuccessMessage("Doklad byl úspěšně vytvořen");
+
                 } catch (SQLException ex) {
                     System.out.println("Error inserting document: " + ex.getMessage());
                 }
@@ -266,7 +269,6 @@ public class AddDocument extends JPanel {
 
         try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
             String line;
-
             while ((line = br.readLine()) != null) {
                 if (!line.isEmpty()) {
                     chosenBookID.add(Integer.parseInt(line.split(" ")[0]));
@@ -277,7 +279,6 @@ public class AddDocument extends JPanel {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
     private void updateQuantityInFile(int id, int value) {
@@ -295,12 +296,6 @@ public class AddDocument extends JPanel {
         }
         return temp;
     }
-
-    private void errorMessage(String error){
-        JOptionPane.showMessageDialog(null, error, "Error", JOptionPane.ERROR_MESSAGE);
-    }
-
-
 
     private Connection getConnection() throws SQLException {
         return DriverManager.getConnection("jdbc:mysql://localhost:3306/java_winter", "root", "");
@@ -358,4 +353,10 @@ public class AddDocument extends JPanel {
     private void showErrorMessage(String message) {
         JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
     }
+
+    private void showSuccessMessage(String message) {
+        JOptionPane.showMessageDialog(null, message, "Success", JOptionPane.INFORMATION_MESSAGE);
+
+    }
+
 }
