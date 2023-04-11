@@ -182,7 +182,6 @@ public class AddDocument extends JPanel {
 
                         updateQuantityInFile(id, value);
                         totalDocumentPrice = getUpdateTotalDocumentPrice();
-//                        System.out.println(totalDocumentPrice + "XA");
                         totalDocumentPriceLabel.setText(totalDocumentPrice + "");
                         refreshWindow();
                     }
@@ -219,85 +218,31 @@ public class AddDocument extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 String type = (String) typeComboBox.getSelectedItem();
                 Date selectedDate = dateChooser.getDate();
+                String customerIDText = customerIDTextField.getText();
+                String customerNameText = customerName.getText();
 
-
-                if(customerIDTextField.getText().isEmpty() || customerName.getText().equals("Not found")){
-                    errorMessage("Nebyl zadaně zprávně zákazník");
+                if (!isValidCustomer(customerIDText, customerNameText)) {
+                    showErrorMessage("Nebyl zadaně zprávně zákazník");
                     return;
                 }
+                int customerID = getCustomerID(customerIDText);
 
-                int customerID = Integer.parseInt(customerIDTextField.getText());
-
-
-                if(type.equals("Koupit")){
-
-                    try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/java_winter", "root", "")) {
-
-                        String sql_doklad = "INSERT INTO doklad (totalPrice) VALUES (?)";
-                        PreparedStatement statement_doklad = conn.prepareStatement(sql_doklad, Statement.RETURN_GENERATED_KEYS);
-                        statement_doklad.setDouble(1, totalDocumentPrice);
-                        int rowsInserted = statement_doklad.executeUpdate();
-
-                        if (rowsInserted > 0) {
-                            ResultSet generatedKeys = statement_doklad.getGeneratedKeys();
-                            if (generatedKeys.next()) {
-                                int dokladId = generatedKeys.getInt(1);
-
-                                for(int i = 0; i < chosenBookID.size(); i++){
-                                    String sql_doklad_kniha = "INSERT INTO doklad_kniha (id_doklad, id_kniha, amount) VALUES (?, ?, ?)";
-                                    PreparedStatement statement_doklad_kniha = conn.prepareStatement(sql_doklad_kniha);
-                                    statement_doklad_kniha.setInt(1, dokladId);
-                                    statement_doklad_kniha.setInt(2, chosenBookID.get(i));
-                                    statement_doklad_kniha.setInt(3, bookQuantity.get(i));
-                                    statement_doklad_kniha.executeUpdate();
-                                }
-
-                                String sql_doklad_zakaznik = "INSERT INTO doklad_zakaznik (id_doklad, id_zakaznik) VALUES (?, ?)";
-                                PreparedStatement statement_doklad_zakaznik  = conn.prepareStatement(sql_doklad_zakaznik);
-                                statement_doklad_zakaznik.setInt(1, dokladId);
-                                statement_doklad_zakaznik.setInt(2, customerID);
-                                statement_doklad_zakaznik.executeUpdate();
-                            }
-                        }
-
-                    } catch (SQLException ex) {
-                        System.out.println("Error inserting document: " + ex.getMessage());
-                    }
-                }else{
-                    try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/java_winter", "root", "")) {
+                try {
+                    int dokladId = -1;
+                    if (type.equals("Koupit")) {
+                        dokladId = insertDocument(totalDocumentPrice, null);
+                    } else {
                         String dateRentTo = String.format("%1$tY-%1$tm-%1$td", selectedDate);
-                        String sql_doklad = "INSERT INTO doklad (datumTo, totalPrice) VALUES (?, ?)";
-                        PreparedStatement statement_doklad = conn.prepareStatement(sql_doklad, Statement.RETURN_GENERATED_KEYS);
-                        statement_doklad.setString(1, dateRentTo);
-                        statement_doklad.setDouble(2, totalDocumentPrice);
-                        int rowsInserted = statement_doklad.executeUpdate();
-                        if (rowsInserted > 0) {
-                            ResultSet generatedKeys = statement_doklad.getGeneratedKeys();
-                            if (generatedKeys.next()) {
-                                int dokladId = generatedKeys.getInt(1);
-                                for(int i = 0; i < chosenBookID.size(); i++){
-                                    String sql_doklad_kniha = "INSERT INTO doklad_kniha (id_doklad, id_kniha, amount) VALUES (?, ?, ?)";
-                                    PreparedStatement statement_doklad_kniha = conn.prepareStatement(sql_doklad_kniha);
-                                    statement_doklad_kniha.setInt(1, dokladId);
-                                    statement_doklad_kniha.setInt(2, chosenBookID.get(i));
-                                    statement_doklad_kniha.setInt(3, bookQuantity.get(i));
-                                    statement_doklad_kniha.executeUpdate();
-                                }
-
-                                String sql_doklad_zakaznik = "INSERT INTO doklad_zakaznik (id_doklad, id_zakaznik) VALUES (?, ?)";
-                                PreparedStatement statement_doklad_zakaznik  = conn.prepareStatement(sql_doklad_zakaznik);
-                                statement_doklad_zakaznik.setInt(1, dokladId);
-                                statement_doklad_zakaznik.setInt(2, customerID);
-                                statement_doklad_zakaznik.executeUpdate();
-                            }
-                        }
-                    }catch (SQLException ex) {
-                        System.out.println("Error inserting document: " + ex.getMessage());
+                        dokladId = insertDocument(totalDocumentPrice, dateRentTo);
                     }
-
+                    if (dokladId != -1) {
+                        insertDocumentItems(dokladId);
+                        insertDocumentCustomer(dokladId, customerID);
+                    }
+                } catch (SQLException ex) {
+                    System.out.println("Error inserting document: " + ex.getMessage());
                 }
-            }
-        });
+            }});
     }
 
     private void refreshWindow() {
@@ -353,5 +298,64 @@ public class AddDocument extends JPanel {
 
     private void errorMessage(String error){
         JOptionPane.showMessageDialog(null, error, "Error", JOptionPane.ERROR_MESSAGE);
+    }
+
+
+
+    private Connection getConnection() throws SQLException {
+        return DriverManager.getConnection("jdbc:mysql://localhost:3306/java_winter", "root", "");
+    }
+
+    private int insertDocument(double totalPrice, String dateRentTo) throws SQLException {
+        String sql_doklad = (dateRentTo == null) ?
+                "INSERT INTO doklad (totalPrice) VALUES (?)" :
+                "INSERT INTO doklad (datumTo, totalPrice) VALUES (?, ?)";
+        PreparedStatement statement_doklad = getConnection().prepareStatement(sql_doklad, Statement.RETURN_GENERATED_KEYS);
+        if (dateRentTo == null) {
+            statement_doklad.setDouble(1, totalPrice);
+        } else {
+            statement_doklad.setString(1, dateRentTo);
+            statement_doklad.setDouble(2, totalPrice);
+        }
+        int rowsInserted = statement_doklad.executeUpdate();
+        int dokladId = -1;
+        if (rowsInserted > 0) {
+            ResultSet generatedKeys = statement_doklad.getGeneratedKeys();
+            if (generatedKeys.next()) {
+                dokladId = generatedKeys.getInt(1);
+            }
+        }
+        return dokladId;
+    }
+
+    private void insertDocumentItems(int dokladId) throws SQLException {
+        for (int i = 0; i < chosenBookID.size(); i++) {
+            String sql_doklad_kniha = "INSERT INTO doklad_kniha (id_doklad, id_kniha, amount) VALUES (?, ?, ?)";
+            PreparedStatement statement_doklad_kniha = getConnection().prepareStatement(sql_doklad_kniha);
+            statement_doklad_kniha.setInt(1, dokladId);
+            statement_doklad_kniha.setInt(2, chosenBookID.get(i));
+            statement_doklad_kniha.setInt(3, bookQuantity.get(i));
+            statement_doklad_kniha.executeUpdate();
+        }
+    }
+
+    private void insertDocumentCustomer(int dokladId, int customerID) throws SQLException {
+        String sql_doklad_zakaznik = "INSERT INTO doklad_zakaznik (id_doklad, id_zakaznik) VALUES (?, ?)";
+        PreparedStatement statement_doklad_zakaznik = getConnection().prepareStatement(sql_doklad_zakaznik);
+        statement_doklad_zakaznik.setInt(1, dokladId);
+        statement_doklad_zakaznik.setInt(2, customerID);
+        statement_doklad_zakaznik.executeUpdate();
+    }
+
+    private boolean isValidCustomer(String customerID, String customerName) {
+        return !customerID.isEmpty() && !customerName.equals("Not found");
+    }
+
+    private int getCustomerID(String customerID) {
+        return Integer.parseInt(customerID);
+    }
+
+    private void showErrorMessage(String message) {
+        JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
     }
 }
