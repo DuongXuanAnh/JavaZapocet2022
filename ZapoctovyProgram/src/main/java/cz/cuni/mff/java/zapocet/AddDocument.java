@@ -325,6 +325,13 @@ public class AddDocument extends JPanel {
 
     private void insertDocumentItems(int dokladId) throws SQLException {
         for (int i = 0; i < chosenBookID.size(); i++) {
+
+            String sql_kniha = "UPDATE kniha SET amount = amount - ? WHERE id = ?";
+            PreparedStatement statement_kniha = getConnection().prepareStatement(sql_kniha);
+            statement_kniha.setInt(1, bookQuantity.get(i));
+            statement_kniha.setInt(2, chosenBookID.get(i));
+            statement_kniha.executeUpdate();
+
             String sql_doklad_kniha = "INSERT INTO doklad_kniha (id_doklad, id_kniha, amount) VALUES (?, ?, ?)";
             PreparedStatement statement_doklad_kniha = getConnection().prepareStatement(sql_doklad_kniha);
             statement_doklad_kniha.setInt(1, dokladId);

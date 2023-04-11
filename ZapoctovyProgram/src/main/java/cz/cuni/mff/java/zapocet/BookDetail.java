@@ -123,6 +123,7 @@ public class BookDetail extends JPanel {
                 }
             }
         });
+
         buttonPanel.add(updateButton);
 
         add(buttonPanel, BorderLayout.SOUTH);
