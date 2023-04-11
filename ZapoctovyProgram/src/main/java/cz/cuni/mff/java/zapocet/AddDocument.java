@@ -168,8 +168,10 @@ public class AddDocument extends JPanel {
                 gbc.gridx = 0;
                 gbc.gridy = position;
                 add(chosenBook, gbc);
-                SpinnerModel model = new SpinnerNumberModel(1, 0, amount, 1);
+
+                SpinnerModel model = new SpinnerNumberModel(1, 1, amount, 1);
                 JSpinner spinner = new JSpinner(model);
+                spinner.setEditor(new CustomSpinnerEditor(spinner));
                 spinnerPriceMap.put(spinner, id);
 
                 // Přidání listeneru pro změny hodnoty v Spinneru
@@ -180,7 +182,7 @@ public class AddDocument extends JPanel {
 
                         int id = spinnerPriceMap.get(spinner);
 
-                        updateQuantityInFile(id, value);
+                        updateQuantity(id, value);
                         totalDocumentPrice = getUpdateTotalDocumentPrice();
                         totalDocumentPriceLabel.setText(totalDocumentPrice + "");
                         refreshWindow();
@@ -190,6 +192,32 @@ public class AddDocument extends JPanel {
                 gbc.gridx = 1;
                 gbc.gridy = position;
                 add(spinner, gbc);
+
+
+                JButton removeOrderBookButton = new JButton("X");
+
+                removeOrderBookButton.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        deleteBookFromFile(id);
+                        chosenBookID = new ArrayList<>();
+                        bookPrice = new ArrayList<>();
+                        bookQuantity = new ArrayList<>();
+                        ReadOrderFile();
+                        totalDocumentPrice = getUpdateTotalDocumentPrice();
+                        totalDocumentPriceLabel.setText(totalDocumentPrice + "");
+                        remove(chosenBook);
+                        remove(spinner);
+                        remove(removeOrderBookButton);
+
+                        refreshWindow();
+                    }
+                });
+
+                gbc.gridx = 2;
+                gbc.gridy = position;
+                add(removeOrderBookButton, gbc);
+
                 position++;
             }
         } catch (SQLException e) {
@@ -216,13 +244,19 @@ public class AddDocument extends JPanel {
         submitButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+
+                if(chosenBookID.size() == 0){
+                    showErrorMessage("Objednávka je prázdná!");
+                    return;
+                }
+
                 String type = (String) typeComboBox.getSelectedItem();
                 Date selectedDate = dateChooser.getDate();
                 String customerIDText = customerIDTextField.getText();
                 String customerNameText = customerName.getText();
 
                 if (!isValidCustomer(customerIDText, customerNameText)) {
-                    showErrorMessage("Nebyl zadaně zprávně zákazník");
+                    showErrorMessage("Nebyl zadaně zprávně zákazník!");
                     return;
                 }
                 int customerID = getCustomerID(customerIDText);
@@ -281,7 +315,7 @@ public class AddDocument extends JPanel {
         }
     }
 
-    private void updateQuantityInFile(int id, int value) {
+    private void updateQuantity(int id, int value) {
         for(int i = 0; i < chosenBookID.size(); i++){
             if(chosenBookID.get(i) == id){
                 bookQuantity.set(i, value);
@@ -364,6 +398,50 @@ public class AddDocument extends JPanel {
     private void showSuccessMessage(String message) {
         JOptionPane.showMessageDialog(null, message, "Success", JOptionPane.INFORMATION_MESSAGE);
 
+    }
+
+    private void deleteBookFromFile(int id){
+        File inputFile = new File("OrderBooks.txt");
+        ArrayList<String> lines = new ArrayList<>();
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(inputFile));
+            String line;
+            while ((line = reader.readLine()) != null) {
+
+                if(!line.isEmpty()){
+                    int bookID = Integer.parseInt(line.split(" ")[0]);
+                    if (bookID != id) {
+                        lines.add(line);
+                    }
+                }
+            }
+            reader.close();
+            FileWriter writer = new FileWriter(inputFile);
+            for (String newLine : lines) {
+                writer.write(newLine + "\n");
+            }
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    class CustomSpinnerEditor extends JSpinner.DefaultEditor {
+        public CustomSpinnerEditor(JSpinner spinner) {
+            super(spinner);
+            JFormattedTextField textField = getTextField();
+            textField.setEditable(false); // Disable direct text input
+            textField.setFocusable(false); // Disable focus to prevent text selection
+        }
+
+        @Override
+        public void processKeyEvent(KeyEvent evt) {
+            // Allow only arrow key events to change the value
+            if (evt.getID() == KeyEvent.KEY_PRESSED &&
+                    (evt.getKeyCode() == KeyEvent.VK_UP || evt.getKeyCode() == KeyEvent.VK_DOWN)) {
+                super.processKeyEvent(evt);
+            }
+        }
     }
 
 }
