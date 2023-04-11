@@ -128,7 +128,6 @@ public class BookDetail extends JPanel {
 
         add(buttonPanel, BorderLayout.SOUTH);
 
-
         addBookToDocumentButton = new JButton("Přidat do košíku");
         addBookToDocumentButton.addActionListener(new ActionListener() {
             @Override
@@ -316,4 +315,20 @@ public class BookDetail extends JPanel {
             e.printStackTrace();
         }
     }
+
+//    private void refreshWindow() {
+//        // Update the layout
+//        revalidate();
+//
+//        // Find the top-level container of the current component (e.g., JFrame)
+//        Window topLevelContainer = SwingUtilities.getWindowAncestor(BookDetail.this);
+//
+//        // Repack the top-level container to adjust its size
+//        if (topLevelContainer instanceof JFrame) {
+//            ((JFrame) topLevelContainer).pack();
+//        }
+//
+//        // Repaint the entire GUI
+//        topLevelContainer.repaint();
+//    }
 }

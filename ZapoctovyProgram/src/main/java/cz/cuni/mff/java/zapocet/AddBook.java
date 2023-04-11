@@ -236,48 +236,48 @@ public class AddBook extends JPanel {
         add(authorComboBox, gbc);
 
         gbc.gridx = 0;
-        gbc.gridy = positionCombobox + 5;
+        gbc.gridy = 100;
         add(genresLabel, gbc);
 
         gbc.gridx = 1;
         add(genresComboBox, gbc);
 
         gbc.gridx = 0;
-        gbc.gridy = positionCombobox + 5;
+        gbc.gridy = 100;
         add(genresLabel, gbc);
         gbc.gridx = 1;
         add(genresComboBox, gbc);
 
         gbc.gridx = 0;
-        gbc.gridy = positionCombobox + 6;
+        gbc.gridy = 101;
         add(priceLabel, gbc);
 
         gbc.gridx = 1;
         add(priceField, gbc);
 
         gbc.gridx = 0;
-        gbc.gridy = positionCombobox + 7;
+        gbc.gridy = 102;
         add(yearLabel, gbc);
 
         gbc.gridx = 1;
         add(yearField, gbc);
 
         gbc.gridx = 0;
-        gbc.gridy = positionCombobox + 8;
+        gbc.gridy = 103;
         add(quantityLabel, gbc);
 
         gbc.gridx = 1;
         add(quantitySpinner, gbc);
 
         gbc.gridx = 0;
-        gbc.gridy = positionCombobox + 9;
+        gbc.gridy = 104;
         add(descriptionLabel, gbc);
 
         gbc.gridx = 1;
         add(descriptionScrollPane, gbc);
 
         gbc.gridx = 0;
-        gbc.gridy = positionCombobox + 10;
+        gbc.gridy = 105;
         gbc.gridwidth = 2;
         gbc.anchor = GridBagConstraints.CENTER;
         add(submitButton, gbc);

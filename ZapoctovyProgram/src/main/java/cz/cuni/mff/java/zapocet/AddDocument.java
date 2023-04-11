@@ -200,9 +200,6 @@ public class AddDocument extends JPanel {
                     @Override
                     public void actionPerformed(ActionEvent e) {
                         deleteBookFromFile(id);
-                        chosenBookID = new ArrayList<>();
-                        bookPrice = new ArrayList<>();
-                        bookQuantity = new ArrayList<>();
                         ReadOrderFile();
                         totalDocumentPrice = getUpdateTotalDocumentPrice();
                         totalDocumentPriceLabel.setText(totalDocumentPrice + "");
@@ -280,28 +277,35 @@ public class AddDocument extends JPanel {
                     System.out.println("Error inserting document: " + ex.getMessage());
                 }
             }});
+
+
     }
 
-    private void refreshWindow() {
-        // Update the layout
-        revalidate();
+    public void refreshWindow() {
 
-        // Find the top-level container of the current component (e.g., JFrame)
-        Window topLevelContainer = SwingUtilities.getWindowAncestor(AddDocument.this);
+            // Update the layout
+            revalidate();
 
-        // Repack the top-level container to adjust its size
-        if (topLevelContainer instanceof JFrame) {
-            ((JFrame) topLevelContainer).pack();
-        }
+            // Find the top-level container of the current component (e.g., JFrame)
+            Window topLevelContainer = SwingUtilities.getWindowAncestor(AddDocument.this);
 
-        // Repaint the entire GUI
-        topLevelContainer.repaint();
+            // Repack the top-level container to adjust its size
+            if (topLevelContainer instanceof JFrame) {
+                ((JFrame) topLevelContainer).pack();
+            }
+
+            // Repaint the entire GUI
+            topLevelContainer.repaint();
+
+
     }
 
     private void ReadOrderFile() {
         String filePath = "OrderBooks.txt";
-
         try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+            chosenBookID = new ArrayList<>();
+            bookPrice = new ArrayList<>();
+            bookQuantity = new ArrayList<>();
             String line;
             while ((line = br.readLine()) != null) {
                 if (!line.isEmpty()) {
@@ -443,5 +447,6 @@ public class AddDocument extends JPanel {
             }
         }
     }
+
 
 }
