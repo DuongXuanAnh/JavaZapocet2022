@@ -316,19 +316,4 @@ public class BookDetail extends JPanel {
         }
     }
 
-//    private void refreshWindow() {
-//        // Update the layout
-//        revalidate();
-//
-//        // Find the top-level container of the current component (e.g., JFrame)
-//        Window topLevelContainer = SwingUtilities.getWindowAncestor(BookDetail.this);
-//
-//        // Repack the top-level container to adjust its size
-//        if (topLevelContainer instanceof JFrame) {
-//            ((JFrame) topLevelContainer).pack();
-//        }
-//
-//        // Repaint the entire GUI
-//        topLevelContainer.repaint();
-//    }
 }

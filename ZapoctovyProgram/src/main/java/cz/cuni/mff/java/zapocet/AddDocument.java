@@ -281,6 +281,13 @@ public class AddDocument extends JPanel {
 
     }
 
+    /**
+     Refreshes the window to update its layout and adjust its size.
+     This method first calls the revalidate() method to update the layout of the current component,
+     then it finds the top-level container of the current component using the getWindowAncestor() method of the SwingUtilities class.
+     If the top-level container is a JFrame, it calls the pack() method of the JFrame to adjust its size to fit its contents.
+     Finally, it calls the repaint() method of the top-level container to repaint the entire GUI.
+     */
     public void refreshWindow() {
 
             // Update the layout

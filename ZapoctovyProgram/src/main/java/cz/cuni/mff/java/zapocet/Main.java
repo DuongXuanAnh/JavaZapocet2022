@@ -15,10 +15,13 @@ public class Main {
         JButton customerButton = new JButton("Add Customer");
         JButton documentButton = new JButton("Add Document");
         JButton bookDetailButton = new JButton("Book Detail");
+        JButton returnBookButton = new JButton("Return Book");
 
         // Create the card panel to hold the different panels
         JPanel cardPanel = new JPanel(new CardLayout());
         JPanel bookDetailPanel = new BookDetail();
+//        JPanel bookDetailPanel = new ReturnBook();
+
         cardPanel.add(bookDetailPanel, "bookDetail");
 
 
@@ -60,12 +63,20 @@ public class Main {
             cardLayout.show(cardPanel, "bookDetail");
         });
 
+        returnBookButton.addActionListener(e -> {
+            JPanel returnBookPanel2 = new ReturnBook();
+            cardPanel.add(returnBookPanel2, "returnBook");
+            CardLayout cardLayout = (CardLayout) cardPanel.getLayout();
+            cardLayout.show(cardPanel, "returnBook");
+        });
+
         // Add the buttons to the menu panel
         menuPanel.add(bookDetailButton);
         menuPanel.add(authorButton);
         menuPanel.add(bookButton);
         menuPanel.add(customerButton);
         menuPanel.add(documentButton);
+        menuPanel.add(returnBookButton);
 
 
         // Add the menu panel and card panel to the frame
