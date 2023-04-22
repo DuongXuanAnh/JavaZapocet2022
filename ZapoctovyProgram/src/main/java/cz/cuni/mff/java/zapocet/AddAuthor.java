@@ -56,6 +56,9 @@ public class AddAuthor extends JPanel {
                         if (rowsInserted > 0) {
                             System.out.println("New author inserted successfully!");
                             JOptionPane.showMessageDialog(AddAuthor.this, "Autor " + name + " byl úspěšně přidán", "successfully", JOptionPane.INFORMATION_MESSAGE);
+                            nameField.setText("");
+                            nationalComboBox.setSelectedIndex(0);
+                            repaint();
                         }
                     }
                 } catch (SQLException ex) {

@@ -136,26 +136,25 @@ public class AddDocument extends JPanel {
 
         ReadOrderFile();
 
-        String sql = "SELECT * FROM kniha WHERE id IN (";
-        for (int i = 0; i < chosenBookID.size(); i++) {
-            sql += "?";
-            if (i < chosenBookID.size() - 1) {
-                sql += ",";
-            }
-        }
-        sql += ")";
-
-        try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/java_winter", "root", "");
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/java_winter", "root", "")){
+            String sql = "SELECT * FROM kniha WHERE id IN (";
             for (int i = 0; i < chosenBookID.size(); i++) {
-                stmt.setInt(i + 1, chosenBookID.get(i));
+                sql += "?";
+                if (i < chosenBookID.size() - 1) {
+                    sql += ",";
+                }
             }
-            ResultSet rs = stmt.executeQuery();
+            sql += ")";
 
-            // Vytvoření Mapy pro mapování Spinneru na cenu knihy
-            Map<JSpinner, Integer> spinnerPriceMap = new HashMap<>();
+            PreparedStatement stmt = conn.prepareStatement(sql);
+                for (int i = 0; i < chosenBookID.size(); i++) {
+                    stmt.setInt(i + 1, chosenBookID.get(i));
+                }
+                ResultSet rs = stmt.executeQuery();
 
-            int position = 6;
+                // Vytvoření Mapy pro mapování Spinneru na cenu knihy
+                Map<JSpinner, Integer> spinnerPriceMap = new HashMap<>();
+                int position = 6;
             while (rs.next()) {
                 int id = rs.getInt("id");
                 String nazev = rs.getString("nazev");
@@ -217,8 +216,10 @@ public class AddDocument extends JPanel {
 
                 position++;
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
+
+
+        } catch (SQLException ex) {
+            System.out.println("Error inserting customer: " + ex.getMessage());
         }
 
 
@@ -249,7 +250,10 @@ public class AddDocument extends JPanel {
         resetButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-
+                chosenBookID.clear();
+                bookPrice.clear();
+                bookQuantity.clear();
+                deleteFileContents("OrderBooks.txt");
             }
         });
 
@@ -324,6 +328,17 @@ public class AddDocument extends JPanel {
 
     private void ReadOrderFile() {
         String filePath = "OrderBooks.txt";
+        File file = new File(filePath);
+        if (!file.exists()) {
+            try {
+                file.createNewFile();
+                chosenBookID = new ArrayList<>();
+                bookPrice = new ArrayList<>();
+                bookQuantity = new ArrayList<>();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
         try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
             chosenBookID = new ArrayList<>();
             bookPrice = new ArrayList<>();
@@ -332,7 +347,7 @@ public class AddDocument extends JPanel {
             while ((line = br.readLine()) != null) {
                 if (!line.isEmpty()) {
                     chosenBookID.add(Integer.parseInt(line.split(" ")[0]));
-                    bookPrice.add(Double.parseDouble(line.split(" ") [1]));
+                    bookPrice.add(Double.parseDouble(line.split(" ")[1]));
                     bookQuantity.add(Integer.parseInt(line.split(" ")[2]));
                 }
             }
@@ -423,7 +438,6 @@ public class AddDocument extends JPanel {
 
     private void showSuccessMessage(String message) {
         JOptionPane.showMessageDialog(null, message, "Success", JOptionPane.INFORMATION_MESSAGE);
-
     }
 
     private void deleteBookFromFile(int id){
@@ -452,7 +466,17 @@ public class AddDocument extends JPanel {
         }
     }
 
-    class CustomSpinnerEditor extends JSpinner.DefaultEditor {
+    /**
+     * A custom editor for a JSpinner component that restricts user input to arrow key events only.
+     * This class extends JSpinner.DefaultEditor and customizes the behavior of the text field component of the editor.
+     * The text field is set to be non-editable and non-focusable, preventing direct text input and text selection.
+     * Only arrow key events are allowed to change the value of the spinner, while other key events are ignored.
+     */
+    public class CustomSpinnerEditor extends JSpinner.DefaultEditor {
+        /**
+         * Constructs a new CustomSpinnerEditor with the specified JSpinner object.
+         * @param spinner the JSpinner object to customize
+         */
         public CustomSpinnerEditor(JSpinner spinner) {
             super(spinner);
             JFormattedTextField textField = getTextField();
@@ -460,6 +484,10 @@ public class AddDocument extends JPanel {
             textField.setFocusable(false); // Disable focus to prevent text selection
         }
 
+        /**
+         * Processes key events to allow only arrow key events to change the value of the spinner.
+         * @param evt the key event to process
+         */
         @Override
         public void processKeyEvent(KeyEvent evt) {
             // Allow only arrow key events to change the value
@@ -469,6 +497,21 @@ public class AddDocument extends JPanel {
             }
         }
     }
+
+    /**
+     * Deletes all contents of the file specified by the given file path.
+     * @param filePath the path of the file to delete the contents of
+     * @throws NullPointerException if the file path is null
+     * @throws SecurityException if a security manager exists and denies write access to the file
+     */
+    public void deleteFileContents(String filePath) {
+        try (PrintWriter writer = new PrintWriter(filePath)) {
+            writer.print("");
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
 
 
 }
