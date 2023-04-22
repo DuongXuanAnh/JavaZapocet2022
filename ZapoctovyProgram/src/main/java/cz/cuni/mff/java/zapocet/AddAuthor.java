@@ -6,24 +6,35 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.*;
 
+/**
+ * A panel that allows the user to add a new author to a database.
+ */
 public class AddAuthor extends JPanel {
-
+    /**
+     * Creates a new AddAuthor panel with a title label, name and nationality input fields,
+     * and a submit button. When the submit button is clicked, a new author is inserted
+     * into the database.
+     */
     public AddAuthor(){
         setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
+        // Title label
         JLabel title = new JLabel("Přidat autora");
         title.setFont(new Font("Serif", Font.BOLD, 20));
 
+        // Name input field
         JLabel nameLabel = new JLabel("Jméno Autora");
         JTextField nameField = new JTextField(20);
 
+        // Nationality input field
         JLabel nationalLabel = new JLabel("Národnost");
         JComboBox<String> nationalComboBox = new JComboBox<>(
                 new String[]{"American", "British", "Canadian", "Czechia", "Chinese", "French", "German", "Indian", "Italian", "Japanese", "Mexican", "Russian", "Spanish","Vietnam"});
 
+        // Submit button
         JButton submitButton = new JButton("Přidat autora");
 
         submitButton.addActionListener(new ActionListener() {
@@ -36,7 +47,6 @@ public class AddAuthor extends JPanel {
                     JOptionPane.showMessageDialog(AddAuthor.this, "Jméno autora musí být dlouhé mezi 4 a 25 znaky.", "Chyba", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
-
 
                 try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/java_winter?useSSL=false", "root", "");
                      PreparedStatement checkStatement = conn.prepareStatement("SELECT id, jmeno FROM autor WHERE jmeno = ?");

@@ -10,7 +10,7 @@ public class Main {
 
         // Create the menu panel with buttons to switch between different panels
         JPanel menuPanel = new JPanel(new GridLayout(1, 0));
-        JButton authorButton = new JButton("Add Author");
+        JButton authorButton = new JButton("Přidat autora");
         JButton bookButton = new JButton("Add Book");
         JButton customerButton = new JButton("Add Customer");
         JButton documentButton = new JButton("Add Document");

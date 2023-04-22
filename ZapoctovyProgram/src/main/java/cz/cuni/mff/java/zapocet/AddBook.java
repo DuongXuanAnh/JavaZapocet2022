@@ -15,14 +15,12 @@ import java.text.NumberFormat;
 
 public class AddBook extends JPanel {
     private List<JComboBox<String>> authorComboBoxes;
-    int positionCombobox = 2;
+    int positionCombobox = 3;
     public AddBook() {
         setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
-
-
 
         JLabel title = new JLabel("Přidat knihu");
         title.setFont(new Font("Serif", Font.BOLD, 20));
@@ -76,7 +74,7 @@ public class AddBook extends JPanel {
 
         JButton addAuthorButton = new JButton("Přidat autora");
         gbc.gridx = 2;
-        gbc.gridy = 1;
+        gbc.gridy = 2;
         add(addAuthorButton, gbc);
 
         // Create a new list to store the "Remove" buttons
@@ -111,6 +109,7 @@ public class AddBook extends JPanel {
                         // Remove the combo box and the "Remove" button from the panel
                         remove(newAuthorComboBox);
                         remove(removeAuthorButton);
+                        authorComboBoxes.remove(newAuthorComboBox);
 
                         // Update the layout
                         revalidate();
@@ -159,11 +158,24 @@ public class AddBook extends JPanel {
         submitButton.addActionListener(new ActionListener() {
            public void actionPerformed(ActionEvent e) {
                String name = nameField.getText();
+
+               if(!validatorNameCheck(name)){
+                   return;
+               }
+
                List<String> authorNames = new ArrayList<>();
+
                for (JComboBox<String> authorComboBox : authorComboBoxes) {
                    String authorName = (String) authorComboBox.getSelectedItem();
+
+                   if(authorNames.contains(authorName)){
+                       JOptionPane.showMessageDialog(AddBook.this, "Vybraný autor se opakuje.", "Chyba", JOptionPane.ERROR_MESSAGE);
+                       return;
+                   }
+
                    authorNames.add(authorName);
                }
+
                String genre = (String) genresComboBox.getSelectedItem();
                double price = ((Number) priceField.getValue()).doubleValue();
                int year = ((Number) yearField.getValue()).intValue();
@@ -315,5 +327,14 @@ public class AddBook extends JPanel {
         formatter.setAllowsInvalid(false);
         formatter.setCommitsOnValidEdit(true);
         return formatter;
+    }
+
+    private boolean validatorNameCheck(String name){
+        if (name.length() == 0) {
+            // Show popup message if name is too short or too long
+            JOptionPane.showMessageDialog(AddBook.this, "Název knihy nesmí být prázdné.", "Chyba", JOptionPane.ERROR_MESSAGE);
+            return true;
+        }
+        return false;
     }
 }
