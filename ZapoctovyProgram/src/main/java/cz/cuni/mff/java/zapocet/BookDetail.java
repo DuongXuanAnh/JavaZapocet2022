@@ -1,6 +1,7 @@
 package cz.cuni.mff.java.zapocet;
 
 import javax.swing.*;
+import javax.swing.border.TitledBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
@@ -30,6 +31,17 @@ public class BookDetail extends JPanel {
 
     public BookDetail() {
         setLayout(new BorderLayout());
+
+        // Create a titled border with a larger font
+        TitledBorder titledBorder = BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(Color.BLACK),
+                "Book Details",
+                TitledBorder.CENTER,
+                TitledBorder.DEFAULT_POSITION,
+                new Font("Arial", Font.BOLD, 20)); // Set the font to 16pt Arial Bold
+
+// Set the border on the panel
+        setBorder(titledBorder);
 
         // Create the search field
         searchField = new JTextField();

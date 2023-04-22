@@ -238,6 +238,21 @@ public class AddDocument extends JPanel {
         gbc.anchor = GridBagConstraints.CENTER;
         add(submitButton, gbc);
 
+
+        JButton resetButton = new JButton("Reset");
+        gbc.gridx = 1;
+        gbc.gridy = 100;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.CENTER;
+        add(resetButton, gbc);
+
+        resetButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+            }
+        });
+
         submitButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {

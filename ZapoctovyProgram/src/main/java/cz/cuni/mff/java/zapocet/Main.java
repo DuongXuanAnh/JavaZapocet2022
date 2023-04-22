@@ -19,8 +19,8 @@ public class Main {
 
         // Create the card panel to hold the different panels
         JPanel cardPanel = new JPanel(new CardLayout());
-//        JPanel bookDetailPanel = new BookDetail();
-        JPanel bookDetailPanel = new ReturnBook();
+        JPanel bookDetailPanel = new BookDetail();
+//        JPanel bookDetailPanel = new ReturnBook();
 
         cardPanel.add(bookDetailPanel, "bookDetail");
 

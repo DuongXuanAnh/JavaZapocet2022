@@ -22,6 +22,15 @@ public class AddBook extends JPanel {
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
+
+
+        JLabel title = new JLabel("Přidat knihu");
+        title.setFont(new Font("Serif", Font.BOLD, 20));
+
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        add(title, gbc);
+
         JLabel nameLabel = new JLabel("Název");
         JTextField nameField = new JTextField(20);
 
@@ -222,14 +231,14 @@ public class AddBook extends JPanel {
        });
 
         gbc.gridx = 0;
-        gbc.gridy = 0;
+        gbc.gridy = 1;
         add(nameLabel, gbc);
 
         gbc.gridx = 1;
         add(nameField, gbc);
 
         gbc.gridx = 0;
-        gbc.gridy = 1;
+        gbc.gridy = 2;
         add(authorLabel, gbc);
 
         gbc.gridx = 1;
