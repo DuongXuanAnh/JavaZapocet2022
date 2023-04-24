@@ -76,7 +76,6 @@ public class Main {
         menuPanel.add(documentButton);
         menuPanel.add(returnBookButton);
 
-
         // Add the menu panel and card panel to the frame
         frame.getContentPane().setLayout(new BorderLayout());
         frame.getContentPane().add(menuPanel, BorderLayout.NORTH);

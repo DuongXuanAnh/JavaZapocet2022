@@ -66,9 +66,7 @@ public class AddAuthor extends JPanel {
                         if (rowsInserted > 0) {
                             System.out.println("New author inserted successfully!");
                             JOptionPane.showMessageDialog(AddAuthor.this, "Autor " + name + " byl úspěšně přidán", "successfully", JOptionPane.INFORMATION_MESSAGE);
-                            nameField.setText("");
-                            nationalComboBox.setSelectedIndex(0);
-                            repaint();
+                            resetPanel();
                         }
                     }
                 } catch (SQLException ex) {
@@ -102,6 +100,21 @@ public class AddAuthor extends JPanel {
         gbc.gridwidth = 2;
         gbc.anchor = GridBagConstraints.CENTER;
         add(submitButton, gbc);
+    }
+
+    /**
+     * Resets the AddAuthor panel to its initial state by replacing the current panel
+     * with a new instance of the AddAuthor panel. This method creates a new AddAuthor
+     * panel, adds it to the parent container with the name "addAuthor", and switches
+     * to this panel using a CardLayout. This has the effect of completely resetting
+     * the panel to its initial state, with all input fields and state variables
+     * set to their default values.
+     */
+    void resetPanel(){
+        AddAuthor newAuthorPanel = new AddAuthor();
+        getParent().add(newAuthorPanel, "addAuthor");
+        CardLayout cardLayout = (CardLayout) getParent().getLayout();
+        cardLayout.show(getParent(), "addAuthor");
     }
 
 }
