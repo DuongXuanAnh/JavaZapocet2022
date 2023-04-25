@@ -6,16 +6,20 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-
+    /**
+        A panel for adding a new customer to the database. Contains a form for entering the customer's name and date of birth,
+        and a submit button for adding the customer to the database. Upon successful insertion, displays a success message and
+        resets the form.
+    */
 public class AddCustomer extends JPanel {
-
+    /**
+     Constructs a new AddCustomer panel with a form for entering the customer's name and date of birth, and a submit
+     button for adding the customer to the database.
+     */
     public AddCustomer(){
         setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
@@ -32,10 +36,7 @@ public class AddCustomer extends JPanel {
         JDateChooser dateChooser = new JDateChooser();
         dateChooser.setDateFormatString("dd.MM.yyyy");
 
-
         JButton submitButton = new JButton("Přidat zákazníka");
-
-
 
         gbc.gridx = 0;
         gbc.gridy = 0;
@@ -71,6 +72,13 @@ public class AddCustomer extends JPanel {
                 // Check if date is null
                 if (selectedDate == null) {
                     System.out.println("Chyba: Datum nebyl vybrán.");
+                    Notification.showErrorMessage("Datum nebyl vybrán.");
+                    return;
+                }
+
+                if(!selectedDate.before(new Date())){
+                    System.out.println("Chyba: Datum je v budoucnosti.");
+                    Notification.showErrorMessage("Datum musí být v minulosti.");
                     return;
                 }
 
@@ -80,20 +88,38 @@ public class AddCustomer extends JPanel {
 
                 try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/java_winter", "root", "")) {
                     String sql = "INSERT INTO zakaznik (jmeno, datum_narozeni) VALUES (?, ?)";
-                    PreparedStatement statement = conn.prepareStatement(sql);
+                    PreparedStatement statement = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
                     statement.setString(1, customerName);
                     statement.setString(2, dateStr);
                     int rowsInserted = statement.executeUpdate();
                     if (rowsInserted > 0) {
                         System.out.println("New customer inserted successfully!");
+                        ResultSet rs = statement.getGeneratedKeys();
+                        if (rs.next()) {
+                            int generatedId = rs.getInt(1);
+                            System.out.println("Generated ID: " + generatedId);
+                            Notification.showSuccessMessage("Nový zákazník byl založen s ID: " + generatedId);
+                            resetPanel();
+                        }else{
+                            Notification.showErrorMessage("Nastala chyba, prosím zkuste to znovu");
+                        }
                     }
                 } catch (SQLException ex) {
                     System.out.println("Error inserting customer: " + ex.getMessage());
+                    Notification.showErrorMessage("Chyba, zkuste to znovu nebo kontaktujte IT oddělení");
                 }
             }
         });
     }
 
-
+    /**
+     Resets the AddCustomer panel to its initial state by creating a new instance of the panel and displaying it.
+     */
+    void resetPanel(){
+        AddCustomer newCustomerPanel = new AddCustomer();
+        getParent().add(newCustomerPanel, "addCustomer");
+        CardLayout cardLayout = (CardLayout) getParent().getLayout();
+        cardLayout.show(getParent(), "addCustomer");
+    }
 
 }

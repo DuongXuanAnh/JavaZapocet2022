@@ -202,8 +202,6 @@ public class AddBook extends JPanel {
                        int rowsInserted = insertStatement.executeUpdate();
 
                        if (rowsInserted > 0) {
-                           System.out.println("New book inserted successfully!");
-
                            // získání ID nové knihy
 
                            ResultSet generatedKeys = insertStatement.getGeneratedKeys();
@@ -224,23 +222,26 @@ public class AddBook extends JPanel {
                                                }
                                            } catch (SQLException ex) {
                                                System.out.println("Error inserting book_author record: " + ex.getMessage());
+                                               Notification.showErrorMessage("Chyba, zkuste to znovu nebo kontaktujte IT oddělení");
                                            }
                                        } else {
                                            System.out.println("Author not found: " + authorName);
+                                           Notification.showErrorMessage(authorName + "Nebyl nalezen");
                                        }
                                    } catch (SQLException ex) {
                                        System.out.println("Error getting author ID: " + ex.getMessage());
+                                       Notification.showErrorMessage("Chyba, zkuste to znovu nebo kontaktujte IT oddělení");
                                    }
                                }
                            }
 
-                           JOptionPane.showMessageDialog(AddBook.this, "Kniha \"" + name + "\" byla úspěšně přidána", "successfully", JOptionPane.INFORMATION_MESSAGE);
-
+                           Notification.showSuccessMessage("Kniha \"" + name + "\" byla úspěšně přidána");
                            resetPanel();
 
                        }
                    } catch (SQLException ex) {
                        System.out.println("Error inserting book: " + ex.getMessage());
+                       Notification.showErrorMessage("Chyba, zkuste to znovu nebo kontaktujte IT oddělení");
                    }
                }
 
@@ -313,6 +314,11 @@ public class AddBook extends JPanel {
         authorComboBoxes.add(authorComboBox);
     }
 
+    /**
+     Creates and returns a NumberFormatter object that can be used to format decimal input in a JFormattedTextField.
+     The formatter only allows decimal numbers between 0.0 and Double.MAX_VALUE.
+     @return the created NumberFormatter object
+     */
     private NumberFormatter createNumberFormatter() {
         NumberFormat format = NumberFormat.getNumberInstance();
         NumberFormatter formatter = new NumberFormatter(format);
@@ -324,6 +330,11 @@ public class AddBook extends JPanel {
         return formatter;
     }
 
+    /**
+     Creates and returns a NumberFormatter object that can be used to format integer input in a JFormattedTextField.
+     The formatter only allows integers between 0 and Integer.MAX_VALUE.
+     @return the created NumberFormatter object
+     */
     private NumberFormatter createIntFormatter() {
         NumberFormat format = NumberFormat.getIntegerInstance();
         NumberFormatter formatter = new NumberFormatter(format);
@@ -335,6 +346,11 @@ public class AddBook extends JPanel {
         return formatter;
     }
 
+    /**
+     Checks if the provided book name input is valid (not empty).
+     @param name the name input to be validated
+     @return true if the name input is valid, false otherwise
+     */
     private boolean validNameInput(String name){
         if (name.length() == 0) {
             JOptionPane.showMessageDialog(AddBook.this, "Název knihy nesmí být prázdné.", "Chyba", JOptionPane.ERROR_MESSAGE);
@@ -343,6 +359,9 @@ public class AddBook extends JPanel {
         return true;
     }
 
+    /**
+     Resets the AddBook panel to its initial state by creating a new instance of the panel and displaying it.
+     */
     void resetPanel(){
         AddBook newAddBookPanel = new AddBook();
         getParent().add(newAddBookPanel, "addBook");
