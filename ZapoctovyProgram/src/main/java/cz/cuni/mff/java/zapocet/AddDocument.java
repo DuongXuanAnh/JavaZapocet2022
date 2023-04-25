@@ -42,7 +42,7 @@ public class AddDocument extends JPanel {
         JLabel typeLabel = new JLabel("Typ:");
         JComboBox<String> typeComboBox = new JComboBox<>(new String[]{"Pujčit", "Koupit"});
 
-        JLabel dateLabel = new JLabel("Datum:");
+        JLabel dateLabel = new JLabel("Datum vrácení:");
         JDateChooser dateChooser = new JDateChooser();
         dateChooser.setDateFormatString("dd.MM.yyyy");
 
@@ -135,6 +135,10 @@ public class AddDocument extends JPanel {
         add(chosenBooks, gbc);
 
         ReadOrderFile();
+
+        if (chosenBookID.isEmpty()) {
+            return;
+        }
 
         try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/java_winter", "root", "")){
             String sql = "SELECT * FROM kniha WHERE id IN (";
@@ -235,6 +239,7 @@ public class AddDocument extends JPanel {
         JButton submitButton = new JButton("Přidat doklad");
         gbc.gridx = 0;
         gbc.gridy = 100;
+        gbc.gridwidth = 2;
         gbc.fill = GridBagConstraints.NONE;
         gbc.anchor = GridBagConstraints.CENTER;
         add(submitButton, gbc);
@@ -249,15 +254,31 @@ public class AddDocument extends JPanel {
                     return;
                 }
 
+
                 String type = (String) typeComboBox.getSelectedItem();
                 Date selectedDate = dateChooser.getDate();
                 String customerIDText = customerIDTextField.getText();
                 String customerNameText = customerName.getText();
 
-                if (!isValidCustomer(customerIDText, customerNameText)) {
-                    Notification.showErrorMessage("Nebyl zadaně zprávně zákazník!");
+
+                if (selectedDate == null && !type.equals("Koupit")) {
+                    System.out.println("Chyba: Datum nebyl vybrán.");
+                    Notification.showErrorMessage("Datum nebyl vybrán.");
                     return;
                 }
+
+                if(!selectedDate.after(new Date())){
+                    System.out.println("Datum musí být v budoucnosti.");
+                    Notification.showErrorMessage("Datum musí být v budoucnosti.");
+                    return;
+                }
+
+                if (!isValidCustomer(customerIDText, customerNameText)) {
+
+                    Notification.showErrorMessage("ID zákazníka neexistuje!");
+                    return;
+                }
+
                 int customerID = getCustomerID(customerIDText);
 
                 try {
@@ -292,22 +313,15 @@ public class AddDocument extends JPanel {
      Finally, it calls the repaint() method of the top-level container to repaint the entire GUI.
      */
     public void refreshWindow() {
-
             // Update the layout
             revalidate();
-
             // Find the top-level container of the current component (e.g., JFrame)
             Window topLevelContainer = SwingUtilities.getWindowAncestor(AddDocument.this);
-
             // Repack the top-level container to adjust its size
             if (topLevelContainer instanceof JFrame) {
                 ((JFrame) topLevelContainer).pack();
             }
-
-            // Repaint the entire GUI
             topLevelContainer.repaint();
-
-
     }
 
     private void ReadOrderFile() {
@@ -409,6 +423,25 @@ public class AddDocument extends JPanel {
     }
 
     private boolean isValidCustomer(String customerID, String customerName) {
+
+        try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/java_winter", "root", "")) {
+            String sql = "SELECT * FROM zakaznik WHERE id = ?";
+            PreparedStatement statement = conn.prepareStatement(sql);
+
+            statement.setInt(1, Integer.parseInt(customerID));
+
+            ResultSet resultSet = statement.executeQuery();
+
+            if (resultSet.next()) {
+                return true;
+            }
+
+            return false;
+
+        }catch (SQLException ex){
+            System.out.println("Error: " + ex.getMessage());
+        }
+
         return !customerID.isEmpty() && !customerName.equals("Not found");
     }
 
@@ -487,7 +520,5 @@ public class AddDocument extends JPanel {
             e.printStackTrace();
         }
     }
-
-
 
 }
