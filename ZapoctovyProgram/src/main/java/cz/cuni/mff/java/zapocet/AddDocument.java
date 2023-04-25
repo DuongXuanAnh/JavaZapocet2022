@@ -240,29 +240,12 @@ public class AddDocument extends JPanel {
         add(submitButton, gbc);
 
 
-        JButton resetButton = new JButton("Reset");
-        gbc.gridx = 1;
-        gbc.gridy = 100;
-        gbc.fill = GridBagConstraints.NONE;
-        gbc.anchor = GridBagConstraints.CENTER;
-        add(resetButton, gbc);
-
-        resetButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                chosenBookID.clear();
-                bookPrice.clear();
-                bookQuantity.clear();
-                deleteFileContents("OrderBooks.txt");
-            }
-        });
-
         submitButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
 
                 if(chosenBookID.size() == 0){
-                    showErrorMessage("Objednávka je prázdná!");
+                    Notification.showErrorMessage("Objednávka je prázdná!");
                     return;
                 }
 
@@ -272,7 +255,7 @@ public class AddDocument extends JPanel {
                 String customerNameText = customerName.getText();
 
                 if (!isValidCustomer(customerIDText, customerNameText)) {
-                    showErrorMessage("Nebyl zadaně zprávně zákazník!");
+                    Notification.showErrorMessage("Nebyl zadaně zprávně zákazník!");
                     return;
                 }
                 int customerID = getCustomerID(customerIDText);
@@ -290,10 +273,11 @@ public class AddDocument extends JPanel {
                         insertDocumentCustomer(dokladId, customerID);
                     }
 
-                    showSuccessMessage("Doklad byl úspěšně vytvořen");
+                    Notification.showSuccessMessage("Doklad byl úspěšně vytvořen");
 
                 } catch (SQLException ex) {
                     System.out.println("Error inserting document: " + ex.getMessage());
+                    Notification.showErrorMessage("Chyba, zkuste to znovu nebo kontaktujte IT oddělení");
                 }
             }});
 
@@ -430,14 +414,6 @@ public class AddDocument extends JPanel {
 
     private int getCustomerID(String customerID) {
         return Integer.parseInt(customerID);
-    }
-
-    private void showErrorMessage(String message) {
-        JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
-    }
-
-    private void showSuccessMessage(String message) {
-        JOptionPane.showMessageDialog(null, message, "Success", JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void deleteBookFromFile(int id){
