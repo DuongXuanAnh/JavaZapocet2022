@@ -42,9 +42,8 @@ public class AddAuthor extends JPanel {
                 String name = nameField.getText();
                 String national = (String) nationalComboBox.getSelectedItem();
 
-                if (name.length() < 4 || name.length() > 25) {
-                    // Show popup message if name is too short or too long
-                    JOptionPane.showMessageDialog(AddAuthor.this, "Jméno autora musí být dlouhé mezi 4 a 25 znaky.", "Chyba", JOptionPane.ERROR_MESSAGE);
+                if (name.isEmpty()) {
+                    Notification.showErrorMessage("Jméno autora nesmí být prázdné");
                     return;
                 }
 

@@ -67,6 +67,12 @@ public class AddCustomer extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String customerName = nameField.getText();
+
+                if(customerName.isEmpty()){
+                    Notification.showErrorMessage("Jméno nesmí být prázdné");
+                    return;
+                }
+
                 Date selectedDate = dateChooser.getDate();
 
                 // Check if date is null
