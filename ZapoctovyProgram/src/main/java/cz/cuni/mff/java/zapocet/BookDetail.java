@@ -35,7 +35,7 @@ public class BookDetail extends JPanel {
         // Create a titled border with a larger font
         TitledBorder titledBorder = BorderFactory.createTitledBorder(
                 BorderFactory.createLineBorder(Color.BLACK),
-                "Book Details",
+                "Knihy",
                 TitledBorder.CENTER,
                 TitledBorder.DEFAULT_POSITION,
                 new Font("Arial", Font.BOLD, 20)); // Set the font to 16pt Arial Bold

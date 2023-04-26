@@ -13,7 +13,7 @@ public class Main {
         JButton authorButton = new JButton("Přidat autora");
         JButton bookButton = new JButton("Přidat knihu");
         JButton customerButton = new JButton("Přidat zákazníka");
-        JButton documentButton = new JButton("Add Document");
+        JButton documentButton = new JButton("Objednávka");
         JButton bookDetailButton = new JButton("Book Detail");
         JButton returnBookButton = new JButton("Return Book");
 

@@ -3,11 +3,7 @@ package cz.cuni.mff.java.zapocet;
 import com.toedter.calendar.JDateChooser;
 
 import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.io.*;
@@ -19,6 +15,13 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+A JPanel for creating a document and adding it to the database.
+Allows the user to select the type of document, date of return, customer ID,
+and the books they want to add to the document.
+The total price is calculated based on the books added.
+The document is then added to the database and a success or error message is shown.
+*/
 public class AddDocument extends JPanel {
 
     JLabel totalDocumentPriceLabel = new JLabel("");
@@ -46,12 +49,9 @@ public class AddDocument extends JPanel {
         JDateChooser dateChooser = new JDateChooser();
         dateChooser.setDateFormatString("dd.MM.yyyy");
 
-        typeComboBox.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String selectedOption = (String) typeComboBox.getSelectedItem();
-                dateChooser.setVisible(!selectedOption.equals("Koupit"));
-            }
+        typeComboBox.addActionListener(e -> {
+            String selectedOption = (String) typeComboBox.getSelectedItem();
+            dateChooser.setVisible(!selectedOption.equals("Koupit"));
         });
 
         gbc.gridx = 0;
@@ -178,18 +178,16 @@ public class AddDocument extends JPanel {
                 spinnerPriceMap.put(spinner, id);
 
                 // Přidání listeneru pro změny hodnoty v Spinneru
-                spinner.addChangeListener(new ChangeListener() {
-                    public void stateChanged(ChangeEvent e) {
-                        // Získání hodnoty ze Spinneru
-                        int value = (int) spinner.getValue();
+                spinner.addChangeListener(e -> {
+                    // Získání hodnoty ze Spinneru
+                    int value = (int) spinner.getValue();
 
-                        int id = spinnerPriceMap.get(spinner);
+                    int id1 = spinnerPriceMap.get(spinner);
 
-                        updateQuantity(id, value);
-                        totalDocumentPrice = getUpdateTotalDocumentPrice();
-                        totalDocumentPriceLabel.setText(totalDocumentPrice + "");
-                        refreshWindow();
-                    }
+                    updateQuantity(id1, value);
+                    totalDocumentPrice = getUpdateTotalDocumentPrice();
+                    totalDocumentPriceLabel.setText(totalDocumentPrice + "");
+                    refreshWindow();
                 });
 
                 gbc.gridx = 1;
@@ -199,19 +197,16 @@ public class AddDocument extends JPanel {
 
                 JButton removeOrderBookButton = new JButton("X");
 
-                removeOrderBookButton.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        deleteBookFromFile(id);
-                        ReadOrderFile();
-                        totalDocumentPrice = getUpdateTotalDocumentPrice();
-                        totalDocumentPriceLabel.setText(totalDocumentPrice + "");
-                        remove(chosenBook);
-                        remove(spinner);
-                        remove(removeOrderBookButton);
+                removeOrderBookButton.addActionListener(e -> {
+                    deleteBookFromFile(id);
+                    ReadOrderFile();
+                    totalDocumentPrice = getUpdateTotalDocumentPrice();
+                    totalDocumentPriceLabel.setText(totalDocumentPrice + "");
+                    remove(chosenBook);
+                    remove(spinner);
+                    remove(removeOrderBookButton);
 
-                        refreshWindow();
-                    }
+                    refreshWindow();
                 });
 
                 gbc.gridx = 2;
@@ -239,69 +234,71 @@ public class AddDocument extends JPanel {
         JButton submitButton = new JButton("Přidat doklad");
         gbc.gridx = 0;
         gbc.gridy = 100;
-        gbc.gridwidth = 2;
+        gbc.gridwidth = 3;
         gbc.fill = GridBagConstraints.NONE;
         gbc.anchor = GridBagConstraints.CENTER;
         add(submitButton, gbc);
 
 
-        submitButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
 
-                if(chosenBookID.size() == 0){
-                    Notification.showErrorMessage("Objednávka je prázdná!");
-                    return;
+        submitButton.addActionListener(e -> {
+
+            if(chosenBookID.size() == 0){
+                Notification.showErrorMessage("Objednávka je prázdná!");
+                return;
+            }
+
+            String type = (String) typeComboBox.getSelectedItem();
+            Date selectedDate = dateChooser.getDate();
+            String customerIDText = customerIDTextField.getText();
+            String customerNameText = customerName.getText();
+
+            if (selectedDate == null && !type.equals("Koupit")) {
+                System.out.println("Chyba: Datum nebyl vybrán.");
+                Notification.showErrorMessage("Datum nebyl vybrán.");
+                return;
+            }
+
+            if(!selectedDate.after(new Date())){
+                System.out.println("Datum musí být v budoucnosti.");
+                Notification.showErrorMessage("Datum musí být v budoucnosti.");
+                return;
+            }
+
+            if(customerIDText.isEmpty()){
+                Notification.showErrorMessage("Zadejte prosím ID zákazníka");
+                return;
+            }
+
+            if (!isValidCustomer(customerIDText, customerNameText)) {
+                Notification.showErrorMessage("ID zákazníka neexistuje!");
+                return;
+            }
+
+            int customerID = getCustomerID(customerIDText);
+
+            try {
+                int dokladId = -1;
+                if (type.equals("Koupit")) {
+                    dokladId = insertDocument(totalDocumentPrice, null);
+                } else {
+                    String dateRentTo = String.format("%1$tY-%1$tm-%1$td", selectedDate);
+                    dokladId = insertDocument(totalDocumentPrice, dateRentTo);
+                }
+                if (dokladId != -1) {
+                    insertDocumentItems(dokladId);
+                    insertDocumentCustomer(dokladId, customerID);
                 }
 
+                Notification.showSuccessMessage("Doklad byl úspěšně vytvořen - číslo vaší objednávky je: " + dokladId);
 
-                String type = (String) typeComboBox.getSelectedItem();
-                Date selectedDate = dateChooser.getDate();
-                String customerIDText = customerIDTextField.getText();
-                String customerNameText = customerName.getText();
+                resetPanel();
 
-
-                if (selectedDate == null && !type.equals("Koupit")) {
-                    System.out.println("Chyba: Datum nebyl vybrán.");
-                    Notification.showErrorMessage("Datum nebyl vybrán.");
-                    return;
-                }
-
-                if(!selectedDate.after(new Date())){
-                    System.out.println("Datum musí být v budoucnosti.");
-                    Notification.showErrorMessage("Datum musí být v budoucnosti.");
-                    return;
-                }
-
-                if (!isValidCustomer(customerIDText, customerNameText)) {
-
-                    Notification.showErrorMessage("ID zákazníka neexistuje!");
-                    return;
-                }
-
-                int customerID = getCustomerID(customerIDText);
-
-                try {
-                    int dokladId = -1;
-                    if (type.equals("Koupit")) {
-                        dokladId = insertDocument(totalDocumentPrice, null);
-                    } else {
-                        String dateRentTo = String.format("%1$tY-%1$tm-%1$td", selectedDate);
-                        dokladId = insertDocument(totalDocumentPrice, dateRentTo);
-                    }
-                    if (dokladId != -1) {
-                        insertDocumentItems(dokladId);
-                        insertDocumentCustomer(dokladId, customerID);
-                    }
-
-                    Notification.showSuccessMessage("Doklad byl úspěšně vytvořen");
-
-                } catch (SQLException ex) {
-                    System.out.println("Error inserting document: " + ex.getMessage());
-                    Notification.showErrorMessage("Chyba, zkuste to znovu nebo kontaktujte IT oddělení");
-                }
-            }});
-
+            } catch (SQLException ex) {
+                System.out.println("Error inserting document: " + ex.getMessage());
+                Notification.showErrorMessage("Chyba, zkuste to znovu nebo kontaktujte IT oddělení");
+            }
+        });
 
     }
 
@@ -319,11 +316,15 @@ public class AddDocument extends JPanel {
             Window topLevelContainer = SwingUtilities.getWindowAncestor(AddDocument.this);
             // Repack the top-level container to adjust its size
             if (topLevelContainer instanceof JFrame) {
-                ((JFrame) topLevelContainer).pack();
+                topLevelContainer.pack();
             }
             topLevelContainer.repaint();
     }
 
+    /**
+     Reads book orders from the "OrderBooks.txt" file and populates the corresponding ArrayLists with their values.
+     If the file does not exist, a new file is created and the ArrayLists are initialized as empty.
+     */
     private void ReadOrderFile() {
         String filePath = "OrderBooks.txt";
         File file = new File(filePath);
@@ -354,6 +355,11 @@ public class AddDocument extends JPanel {
         }
     }
 
+    /**
+     Updates the quantity of a selected book with the given ID.
+     @param id the ID of the book to be updated
+     @param value the new quantity value to be set
+     */
     private void updateQuantity(int id, int value) {
         for(int i = 0; i < chosenBookID.size(); i++){
             if(chosenBookID.get(i) == id){
@@ -362,6 +368,10 @@ public class AddDocument extends JPanel {
         }
     }
 
+    /**
+     Calculates and returns the total price of the document based on the selected books and their quantities.
+     @return the total price of the document
+     */
     private double getUpdateTotalDocumentPrice(){
         double temp = 0;
         for(int i = 0; i < chosenBookID.size(); i++){
@@ -370,10 +380,24 @@ public class AddDocument extends JPanel {
         return temp;
     }
 
+
+    /**
+     Returns a new connection to the "java_winter" MySQL database.
+     @return a new connection to the "java_winter" MySQL database
+     @throws SQLException if there is an error connecting to the database
+     */
     private Connection getConnection() throws SQLException {
         return DriverManager.getConnection("jdbc:mysql://localhost:3306/java_winter", "root", "");
     }
 
+
+    /**
+     Inserts a record into the "doklad" table with the given total price and rental date, and returns the ID of the new record.
+     @param totalPrice the total price of the document
+     @param dateRentTo the rental date of the document, or null if the document is not a rental
+     @return the ID of the new record in the "doklad" table, or -1 if no record was inserted
+     @throws SQLException if there is an error inserting the record
+     */
     private int insertDocument(double totalPrice, String dateRentTo) throws SQLException {
         String sql_doklad = (dateRentTo == null) ?
                 "INSERT INTO doklad (totalPrice) VALUES (?)" :
@@ -396,6 +420,12 @@ public class AddDocument extends JPanel {
         return dokladId;
     }
 
+    /**
+     Inserts records into the "doklad_kniha" table, linking a document with its purchased items, and updates the
+     corresponding "kniha" records to reflect the decrease in inventory.
+     @param dokladId the ID of the document to be linked
+     @throws SQLException if there is an error inserting or updating records
+     */
     private void insertDocumentItems(int dokladId) throws SQLException {
         for (int i = 0; i < chosenBookID.size(); i++) {
 
@@ -414,6 +444,13 @@ public class AddDocument extends JPanel {
         }
     }
 
+
+    /**
+     Inserts a record into the "doklad_zakaznik" table, linking a document with a customer.
+     @param dokladId the ID of the document to be linked
+     @param customerID the ID of the customer to be linked
+     @throws SQLException if there is an error inserting the record
+     */
     private void insertDocumentCustomer(int dokladId, int customerID) throws SQLException {
         String sql_doklad_zakaznik = "INSERT INTO doklad_zakaznik (id_doklad, id_zakaznik) VALUES (?, ?)";
         PreparedStatement statement_doklad_zakaznik = getConnection().prepareStatement(sql_doklad_zakaznik);
@@ -422,6 +459,13 @@ public class AddDocument extends JPanel {
         statement_doklad_zakaznik.executeUpdate();
     }
 
+    /**
+
+     Checks if a customer exists in the database.
+     @param customerID the ID of the customer to be checked
+     @param customerName the name of the customer to be checked
+     @return true if the customer exists in the database, false otherwise
+     */
     private boolean isValidCustomer(String customerID, String customerName) {
 
         try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/java_winter", "root", "")) {
@@ -445,10 +489,21 @@ public class AddDocument extends JPanel {
         return !customerID.isEmpty() && !customerName.equals("Not found");
     }
 
+    /**
+     Parses a customer ID string and returns the integer value.
+     @param customerID the customer ID string to be parsed
+     @return the integer value of the customer ID
+     @throws NumberFormatException if the customer ID string is not a valid integer
+     */
     private int getCustomerID(String customerID) {
         return Integer.parseInt(customerID);
     }
 
+
+    /**
+     Deletes a book record with the given ID from the "OrderBooks.txt" file.
+     @param id the ID of the book to be deleted
+     */
     private void deleteBookFromFile(int id){
         File inputFile = new File("OrderBooks.txt");
         ArrayList<String> lines = new ArrayList<>();
@@ -519,6 +574,17 @@ public class AddDocument extends JPanel {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     Resets the AddDocument panel to its initial state by creating a new instance of the panel and displaying it.
+     */
+    void resetPanel(){
+        deleteFileContents("OrderBooks.txt");
+        AddDocument newAddDocument = new AddDocument();
+        getParent().add(newAddDocument, "addDocument");
+        CardLayout cardLayout = (CardLayout) getParent().getLayout();
+        cardLayout.show(getParent(), "addDocument");
     }
 
 }
