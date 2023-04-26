@@ -3,25 +3,22 @@ package cz.cuni.mff.java.zapocet;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 public class ReturnBook extends JPanel {
 
     JScrollPane scrollPane;
     JLabel notFoundLabel = new JLabel("Not Found");
-
     String documentIDString;
     JLabel customerNameLabel = new JLabel("Not Found");
-
     List<Integer> bookIdList = new ArrayList<>();
     List<Integer> amountRentBookList = new ArrayList<>();
+
+    DefaultTableModel tableModel;
 
     public ReturnBook(){
         setLayout(new GridBagLayout());
@@ -35,59 +32,56 @@ public class ReturnBook extends JPanel {
         JLabel documentIDLabel = new JLabel("ID objednávky");
         JTextField documentIDTextField = new JTextField(20);
 
+        JButton findButton = new JButton("Hledat");
+
+
         JButton submitButton = new JButton("Vrátit");
         submitButton.setVisible(false);
 
+        submitButton.addActionListener(e -> {
+            try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/java_winter", "root", "")) {
 
-        submitButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/java_winter", "root", "")) {
+                int documentID = Integer.parseInt(documentIDString);
 
-                    int documentID = Integer.parseInt(documentIDString);
-
-                    for (int i = 0; i < bookIdList.size(); i++){
-                        int bookID = bookIdList.get(i);
-                        int bookAmount = amountRentBookList.get(i);
-                        String updateBookAmountSql = "UPDATE kniha SET amount=amount + ? WHERE id=?";
-                        PreparedStatement updateBookAmountStatement = conn.prepareStatement(updateBookAmountSql);
-                        updateBookAmountStatement.setInt(1, bookAmount);
-                        updateBookAmountStatement.setInt(2, bookID);
-                        updateBookAmountStatement.executeUpdate();
-                    }
-
-                    String deleteDokladSql = "DELETE FROM doklad WHERE id = ?";
-                    PreparedStatement deleteDokladStatement = conn.prepareStatement(deleteDokladSql);
-                    deleteDokladStatement.setInt(1, documentID);
-
-                    String deleteDokladKnihaSql = "DELETE FROM doklad_kniha WHERE id_doklad = ?";
-                    PreparedStatement deleteDokladKnihaStatement = conn.prepareStatement(deleteDokladKnihaSql);
-                    deleteDokladKnihaStatement.setInt(1, documentID);
-
-                    String deleteDokladZakaznikSql = "DELETE FROM doklad_zakaznik WHERE id_doklad = ?";
-                    PreparedStatement deleteDokladZakaznikStatement = conn.prepareStatement(deleteDokladZakaznikSql);
-                    deleteDokladZakaznikStatement.setInt(1, documentID);
-
-                    deleteDokladStatement.executeUpdate();
-                    deleteDokladKnihaStatement.executeUpdate();
-                    deleteDokladZakaznikStatement.executeUpdate();
-
-                    showSuccessMessage("Knihy byly vráceny");
-                    refreshWindow();
-
-                } catch (SQLException ex) {
-                    System.out.println("Error: " + ex.getMessage());
+                for (int i = 0; i < bookIdList.size(); i++){
+                    int bookID = bookIdList.get(i);
+                    int bookAmount = amountRentBookList.get(i);
+                    String updateBookAmountSql = "UPDATE kniha SET amount=amount + ? WHERE id=?";
+                    PreparedStatement updateBookAmountStatement = conn.prepareStatement(updateBookAmountSql);
+                    updateBookAmountStatement.setInt(1, bookAmount);
+                    updateBookAmountStatement.setInt(2, bookID);
+                    updateBookAmountStatement.executeUpdate();
                 }
 
+                String deleteDokladSql = "DELETE FROM doklad WHERE id = ?";
+                PreparedStatement deleteDokladStatement = conn.prepareStatement(deleteDokladSql);
+                deleteDokladStatement.setInt(1, documentID);
 
-            }});
+                String deleteDokladKnihaSql = "DELETE FROM doklad_kniha WHERE id_doklad = ?";
+                PreparedStatement deleteDokladKnihaStatement = conn.prepareStatement(deleteDokladKnihaSql);
+                deleteDokladKnihaStatement.setInt(1, documentID);
+
+                String deleteDokladZakaznikSql = "DELETE FROM doklad_zakaznik WHERE id_doklad = ?";
+                PreparedStatement deleteDokladZakaznikStatement = conn.prepareStatement(deleteDokladZakaznikSql);
+                deleteDokladZakaznikStatement.setInt(1, documentID);
+
+                deleteDokladStatement.executeUpdate();
+                deleteDokladKnihaStatement.executeUpdate();
+                deleteDokladZakaznikStatement.executeUpdate();
+
+                Notification.showSuccessMessage("Knihy byly vráceny");
+                refreshWindow();
+
+            } catch (SQLException ex) {
+                System.out.println("Error: " + ex.getMessage());
+            }
+        });
 
         documentIDTextField.addKeyListener(new KeyAdapter() {
             public void keyPressed(KeyEvent event) {
                 if (event.getKeyCode() == KeyEvent.VK_ENTER) {
                     // Get the text entered by the user and display it
                     documentIDString = documentIDTextField.getText();
-
 
                     try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/java_winter", "root", "")) {
                         String sql = "SELECT kniha.nazev AS nazev, doklad.datum, doklad.datumTo, kd.amount, zakaznik.jmeno, zakaznik.id, kniha.id AS bookID\n" +
@@ -119,7 +113,7 @@ public class ReturnBook extends JPanel {
                             int row = 0;
 
                             if (resultSet.next()){
-
+                                customerNameLabel.setText("");
                                 customerNameLabel = new JLabel( "Zákazník: " + resultSet.getString("jmeno") + " ( ID: " +resultSet.getInt("id") + ")");
                                 gbc.gridx = 0;
                                 gbc.gridy = 2;
@@ -159,19 +153,21 @@ public class ReturnBook extends JPanel {
                             }
 
                             // Create a table model with the table data
+
                             String[] columnNames = {"Nazev", "Datum", "DatumTo", "Amount"};
-                            DefaultTableModel tableModel = new DefaultTableModel(tableData, columnNames);
 
-                            // Create a table with the table model
-                            JTable table = new JTable(tableModel);
-
-                            // Add the table to a scroll pane and display it
-                            scrollPane = new JScrollPane(table);
-                            scrollPane.setVisible(true);
-                            gbc.gridx = 0;
-                            gbc.gridy = 3;
-                            add(scrollPane, gbc);
-                            notFoundLabel.setVisible(false);
+                            if (tableModel == null) {
+                                tableModel = new DefaultTableModel(tableData, columnNames);
+                                JTable table = new JTable(tableModel);
+                                scrollPane = new JScrollPane(table);
+                                gbc.gridx = 0;
+                                gbc.gridy = 3;
+                                add(scrollPane, gbc);
+                                notFoundLabel.setVisible(false);
+                            } else {
+                                tableModel.setDataVector(tableData, columnNames);
+                                tableModel.fireTableDataChanged();
+                            }
 
                         }else{
                             submitButton.setVisible(false);
@@ -206,6 +202,9 @@ public class ReturnBook extends JPanel {
         gbc.gridx = 1;
         add(documentIDTextField, gbc);
 
+        gbc.gridx = 2;
+        add(findButton, gbc);
+
         gbc.gridx = 0;
         gbc.gridy = 100;
         gbc.gridwidth = 2;
@@ -231,10 +230,6 @@ public class ReturnBook extends JPanel {
         }
         // Repaint the entire GUI
         topLevelContainer.repaint();
-    }
-
-    private void showSuccessMessage(String message) {
-        JOptionPane.showMessageDialog(null, message, "Success", JOptionPane.INFORMATION_MESSAGE);
     }
 
 }
