@@ -7,6 +7,14 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+
+/**
+ * Constructs a new ReturnBook panel with a title, a label, a text field, and two buttons.
+ * The findButton allows the user to search for a rental order by its ID,
+ * and the submitButton allows the user to return the rented books.
+ * The panel uses a GridBagLayout to arrange the components.
+ * The panel also sets up event listeners for the buttons using lambda expressions.
+ */
 public class ReturnBook extends JPanel {
 
     JScrollPane scrollPane;
@@ -76,113 +84,112 @@ public class ReturnBook extends JPanel {
         });
 
         findButton.addActionListener(e -> {
+            // Get the text entered by the user and display it
+            documentIDString = documentIDTextField.getText();
 
-                    // Get the text entered by the user and display it
-                    documentIDString = documentIDTextField.getText();
+            try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/java_winter", "root", "")) {
+                String sql = "SELECT kniha.nazev AS nazev, doklad.datum, doklad.datumTo, kd.amount, zakaznik.jmeno, zakaznik.id, kniha.id AS bookID\n" +
+                        "FROM doklad\n" +
+                        "JOIN doklad_kniha AS kd ON doklad.id = kd.id_doklad\n" +
+                        "JOIN kniha ON kniha.id = kd.id_kniha\n" +
+                        "JOIN doklad_zakaznik AS dz ON dz.id_doklad = doklad.id\n" +
+                        "JOIN zakaznik ON zakaznik.id = dz.id_zakaznik\n" +
+                        "WHERE doklad.id = ? AND doklad.datumTo IS NOT NULL;";
 
-                    try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/java_winter", "root", "")) {
-                        String sql = "SELECT kniha.nazev AS nazev, doklad.datum, doklad.datumTo, kd.amount, zakaznik.jmeno, zakaznik.id, kniha.id AS bookID\n" +
-                                "FROM doklad\n" +
-                                "JOIN doklad_kniha AS kd ON doklad.id = kd.id_doklad\n" +
-                                "JOIN kniha ON kniha.id = kd.id_kniha\n" +
-                                "JOIN doklad_zakaznik AS dz ON dz.id_doklad = doklad.id\n" +
-                                "JOIN zakaznik ON zakaznik.id = dz.id_zakaznik\n" +
-                                "WHERE doklad.id = ? AND doklad.datumTo IS NOT NULL;";
+                PreparedStatement statement = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 
-                        PreparedStatement statement = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+                statement.setInt(1, Integer.parseInt(documentIDString));
 
-                        statement.setInt(1, Integer.parseInt(documentIDString));
+                ResultSet resultSet = statement.executeQuery();
 
-                        ResultSet resultSet = statement.executeQuery();
+                // Get the number of rows in the result set
+                resultSet.last();
+                int numRows = resultSet.getRow();
+                resultSet.beforeFirst();
 
-                        // Get the number of rows in the result set
-                        resultSet.last();
-                        int numRows = resultSet.getRow();
-                        resultSet.beforeFirst();
+                // Create a 2D array to hold the table data
+                Object[][] tableData = new Object[numRows][4];
 
-                        // Create a 2D array to hold the table data
-                        Object[][] tableData = new Object[numRows][4];
+                if(numRows > 0){
+                    submitButton.setVisible(true);
 
-                        if(numRows > 0){
-                            submitButton.setVisible(true);
+                    // Populate the table data from the result set
+                    int row = 0;
 
-                            // Populate the table data from the result set
-                            int row = 0;
+                    if (resultSet.next()){
+                        customerNameLabel.setText("");
+                        customerNameLabel = new JLabel( "Zákazník: " + resultSet.getString("jmeno") + " ( ID: " +resultSet.getInt("id") + ")");
+                        gbc.gridx = 0;
+                        gbc.gridy = 2;
+                        add(customerNameLabel, gbc);
 
-                            if (resultSet.next()){
-                                customerNameLabel.setText("");
-                                customerNameLabel = new JLabel( "Zákazník: " + resultSet.getString("jmeno") + " ( ID: " +resultSet.getInt("id") + ")");
-                                gbc.gridx = 0;
-                                gbc.gridy = 2;
-                                add(customerNameLabel, gbc);
+                        String nazev = resultSet.getString("nazev");
+                        String datum = resultSet.getString("datum");
+                        String datumTo = resultSet.getString("datumTo");
+                        String amount = resultSet.getString("amount");
 
-                                String nazev = resultSet.getString("nazev");
-                                String datum = resultSet.getString("datum");
-                                String datumTo = resultSet.getString("datumTo");
-                                String amount = resultSet.getString("amount");
+                        bookIdList.add(resultSet.getInt("bookID"));
+                        amountRentBookList.add(resultSet.getInt("amount"));
 
-                                bookIdList.add(resultSet.getInt("bookID"));
-                                amountRentBookList.add(resultSet.getInt("amount"));
+                        tableData[row][0] = nazev;
+                        tableData[row][1] = datum;
+                        tableData[row][2] = datumTo;
+                        tableData[row][3] = amount;
+                        row++;
 
-                                tableData[row][0] = nazev;
-                                tableData[row][1] = datum;
-                                tableData[row][2] = datumTo;
-                                tableData[row][3] = amount;
-                                row++;
+                        while (resultSet.next()) {
 
-                                while (resultSet.next()) {
+                            nazev = resultSet.getString("nazev");
+                            datum = resultSet.getString("datum");
+                            datumTo = resultSet.getString("datumTo");
+                            amount = resultSet.getString("amount");
 
-                                    nazev = resultSet.getString("nazev");
-                                    datum = resultSet.getString("datum");
-                                    datumTo = resultSet.getString("datumTo");
-                                    amount = resultSet.getString("amount");
+                            bookIdList.add(resultSet.getInt("bookID"));
+                            amountRentBookList.add(resultSet.getInt("amount"));
 
-                                    bookIdList.add(resultSet.getInt("bookID"));
-                                    amountRentBookList.add(resultSet.getInt("amount"));
-
-                                    // Add the data to the 2D array
-                                    tableData[row][0] = nazev;
-                                    tableData[row][1] = datum;
-                                    tableData[row][2] = datumTo;
-                                    tableData[row][3] = amount;
-                                    row++;
-                                }
-                            }
-
-                            // Create a table model with the table data
-
-                            String[] columnNames = {"Nazev", "Datum", "DatumTo", "Amount"};
-
-                            if (tableModel == null) {
-                                tableModel = new DefaultTableModel(tableData, columnNames);
-                                JTable table = new JTable(tableModel);
-                                scrollPane = new JScrollPane(table);
-                                gbc.gridx = 0;
-                                gbc.gridy = 3;
-                                add(scrollPane, gbc);
-                                notFoundLabel.setVisible(false);
-                            } else {
-                                tableModel.setDataVector(tableData, columnNames);
-                                tableModel.fireTableDataChanged();
-                            }
-
-                        }else{
-                            submitButton.setVisible(false);
-                            if(scrollPane != null) {
-                                scrollPane.setVisible(false);
-                            }
-                            notFoundLabel.setVisible(true);
-
-                            gbc.gridx = 0;
-                            gbc.gridy = 2;
-                            add(notFoundLabel, gbc);
-
-                            customerNameLabel.setVisible(false);
+                            // Add the data to the 2D array
+                            tableData[row][0] = nazev;
+                            tableData[row][1] = datum;
+                            tableData[row][2] = datumTo;
+                            tableData[row][3] = amount;
+                            row++;
                         }
-                        refreshWindow();
-                    } catch (SQLException ex) {
-                        System.out.println("Error: " + ex.getMessage());
                     }
+
+                    // Create a table model with the table data
+
+                    String[] columnNames = {"Nazev", "Datum", "DatumTo", "Amount"};
+
+                    if (tableModel == null) {
+                        tableModel = new DefaultTableModel(tableData, columnNames);
+                        JTable table = new JTable(tableModel);
+                        scrollPane = new JScrollPane(table);
+                        gbc.gridx = 0;
+                        gbc.gridy = 3;
+                        add(scrollPane, gbc);
+                        notFoundLabel.setVisible(false);
+                    } else {
+                        tableModel.setDataVector(tableData, columnNames);
+                        tableModel.fireTableDataChanged();
+                    }
+
+                }else{
+                    submitButton.setVisible(false);
+                    if(scrollPane != null) {
+                        scrollPane.setVisible(false);
+                    }
+                    notFoundLabel.setVisible(true);
+
+                    gbc.gridx = 0;
+                    gbc.gridy = 2;
+                    add(notFoundLabel, gbc);
+
+                    customerNameLabel.setVisible(false);
+                }
+                refreshWindow();
+            } catch (SQLException ex) {
+                System.out.println("Error: " + ex.getMessage());
+            }
         });
 
         gbc.gridx = 0;
