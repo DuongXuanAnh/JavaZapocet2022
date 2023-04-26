@@ -3,8 +3,6 @@ package cz.cuni.mff.java.zapocet;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -70,16 +68,15 @@ public class ReturnBook extends JPanel {
                 deleteDokladZakaznikStatement.executeUpdate();
 
                 Notification.showSuccessMessage("Knihy byly vráceny");
-                refreshWindow();
+                resetPanel();
 
             } catch (SQLException ex) {
                 System.out.println("Error: " + ex.getMessage());
             }
         });
 
-        documentIDTextField.addKeyListener(new KeyAdapter() {
-            public void keyPressed(KeyEvent event) {
-                if (event.getKeyCode() == KeyEvent.VK_ENTER) {
+        findButton.addActionListener(e -> {
+
                     // Get the text entered by the user and display it
                     documentIDString = documentIDTextField.getText();
 
@@ -186,8 +183,6 @@ public class ReturnBook extends JPanel {
                     } catch (SQLException ex) {
                         System.out.println("Error: " + ex.getMessage());
                     }
-                }
-            }
         });
 
         gbc.gridx = 0;
@@ -226,10 +221,20 @@ public class ReturnBook extends JPanel {
         Window topLevelContainer = SwingUtilities.getWindowAncestor(ReturnBook.this);
         // Repack the top-level container to adjust its size
         if (topLevelContainer instanceof JFrame) {
-            ((JFrame) topLevelContainer).pack();
+            topLevelContainer.pack();
         }
         // Repaint the entire GUI
         topLevelContainer.repaint();
+    }
+
+    /**
+     Resets the ReturnBook panel to its initial state by creating a new instance of the panel and displaying it.
+     */
+    void resetPanel(){
+        ReturnBook newReturnBook = new ReturnBook();
+        getParent().add(newReturnBook, "returnBook");
+        CardLayout cardLayout = (CardLayout) getParent().getLayout();
+        cardLayout.show(getParent(), "returnBook");
     }
 
 }
