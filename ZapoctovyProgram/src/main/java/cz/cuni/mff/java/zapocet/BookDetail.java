@@ -21,6 +21,8 @@ public class BookDetail extends JPanel {
     private JButton editButton;
     private JButton updateButton;
 
+    int idAuthorFilter;
+
     private JButton addBookToDocumentButton;
 
     private JComboBox<String> allAuthorsComboBox;
@@ -183,9 +185,26 @@ public class BookDetail extends JPanel {
 
     private void updateTableModel() {
         String query = searchField.getText();
-        String sql = "SELECT id, nazev, amount, cena FROM kniha WHERE nazev LIKE '%" + query + "%'";
+        String sql;
+        System.out.println(idAuthorFilter);
+        if(idAuthorFilter == 0){
+            sql = "SELECT id, nazev, amount, cena FROM kniha WHERE nazev LIKE '%" + query + "%'";
+        }else{
+            sql = "SELECT * \n" +
+                    "FROM `kniha`\n" +
+                    "JOIN kniha_autor \n" +
+                    "ON kniha.id = kniha_autor.id_kniha\n" +
+                    "JOIN autor\n" +
+                    "ON kniha_autor.id_autor = autor.id\n" +
+                    "WHERE nazev LIKE '%" + query + "%'\n" +
+                    "AND autor.id = ?";
+        }
         try {
             PreparedStatement statement = connection.prepareStatement(sql);
+
+            if(idAuthorFilter != 0){
+                statement.setInt(1, idAuthorFilter);
+            }
             ResultSet resultSet = statement.executeQuery();
             tableModel.setRowCount(0);
             while (resultSet.next()) {
@@ -360,7 +379,13 @@ public class BookDetail extends JPanel {
             public void itemStateChanged(ItemEvent e) {
                 if (e.getStateChange() == ItemEvent.SELECTED) {
                     String selectedAuthor = (String) authorComboBox.getSelectedItem();
+                    if(selectedAuthor.isEmpty()){
+                        idAuthorFilter = 0;
+                        updateTableModel();
+                        return;
+                    }
                     Integer authorId = authorIdMap.get(selectedAuthor);
+                        idAuthorFilter = authorId;
 
 
                     try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/java_winter", "root", "")) {
@@ -374,23 +399,14 @@ public class BookDetail extends JPanel {
                         statement.setInt(1, authorId);
                         ResultSet resultSet = statement.executeQuery();
                         while (resultSet.next()) {
-                            String title = resultSet.getString("nazev");
-                            int year = resultSet.getInt("rok_vydani");
-                            double price = resultSet.getDouble("cena");
-                            String genre = resultSet.getString("zanr");
-                            int amount = resultSet.getInt("amount");
-                            String description = resultSet.getString("popis");
-                            System.out.println(title);
+                            updateTableModel();
                         }
-
                     }catch (SQLException ex) {
                         System.out.println("Error loading authors: " + ex.getMessage());
                     }
                 }
             }
         });
-
-
         panel.add(authorComboBox, BorderLayout.NORTH);
     }
 
