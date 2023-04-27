@@ -6,10 +6,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
+import java.awt.event.*;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.*;
@@ -62,7 +59,22 @@ public class BookDetail extends JPanel {
             }
         });
 
-        add(searchField, BorderLayout.NORTH);
+
+
+        JPanel northPanel = new JPanel(new BorderLayout());
+
+        add(northPanel, BorderLayout.NORTH);
+
+
+        NorthPanelArea(northPanel);
+
+        JLabel westLabel = new JLabel("Název knihy: ");
+        northPanel.add(westLabel, BorderLayout.WEST);
+        northPanel.add(searchField, BorderLayout.CENTER);
+
+
+        JLabel southLabel = new JLabel("South Label");
+        northPanel.add(southLabel, BorderLayout.SOUTH);
 
         // Create the table model and table
         String[] columnNames = {"ID", "Název", "Počet kusů", "Cena"};
@@ -253,9 +265,6 @@ public class BookDetail extends JPanel {
                 panel.add(new JLabel("Popis:"));
                 panel.add(new JScrollPane(descriptionArea));
                 panel.add(new JLabel("Autor:"));
-
-//                ------------------------------------------------------------------------------------
-
                 panel.add(createAllAuthorsComboBox(resultSet.getInt("autor.id")));
 
                 while(resultSet.next()){
@@ -326,6 +335,63 @@ public class BookDetail extends JPanel {
             System.out.println("An error occurred.");
             e.printStackTrace();
         }
+    }
+
+    private void NorthPanelArea(JPanel panel){
+        JComboBox<String> authorComboBox = new JComboBox<>();
+        authorComboBox.addItem("");
+        Map<String, Integer> authorIdMap = new HashMap<>(); // Map to store author names and their IDs
+        try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/java_winter", "root", "")) {
+            String sql = "SELECT id, jmeno FROM autor";
+            PreparedStatement statement = conn.prepareStatement(sql);
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                int id = resultSet.getInt("id");
+                String name = resultSet.getString("jmeno");
+                authorComboBox.addItem(name);
+                authorIdMap.put(name, id); // Store name and ID in the map
+            }
+        } catch (SQLException ex) {
+            System.out.println("Error loading authors: " + ex.getMessage());
+        }
+
+        authorComboBox.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                if (e.getStateChange() == ItemEvent.SELECTED) {
+                    String selectedAuthor = (String) authorComboBox.getSelectedItem();
+                    Integer authorId = authorIdMap.get(selectedAuthor);
+
+
+                    try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/java_winter", "root", "")) {
+                        String sql = "SELECT * \n" +
+                                "FROM `kniha` \n" +
+                                "JOIN kniha_autor\n" +
+                                "ON kniha_autor.id_kniha = kniha.id\n" +
+                                "JOIN autor ON autor.id = kniha_autor.id_autor\n" +
+                                "WHERE autor.id = ?";
+                        PreparedStatement statement = conn.prepareStatement(sql);
+                        statement.setInt(1, authorId);
+                        ResultSet resultSet = statement.executeQuery();
+                        while (resultSet.next()) {
+                            String title = resultSet.getString("nazev");
+                            int year = resultSet.getInt("rok_vydani");
+                            double price = resultSet.getDouble("cena");
+                            String genre = resultSet.getString("zanr");
+                            int amount = resultSet.getInt("amount");
+                            String description = resultSet.getString("popis");
+                            System.out.println(title);
+                        }
+
+                    }catch (SQLException ex) {
+                        System.out.println("Error loading authors: " + ex.getMessage());
+                    }
+                }
+            }
+        });
+
+
+        panel.add(authorComboBox, BorderLayout.NORTH);
     }
 
 }

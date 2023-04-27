@@ -14,7 +14,7 @@ public class Main {
         JButton bookButton = new JButton("Přidat knihu");
         JButton customerButton = new JButton("Přidat zákazníka");
         JButton documentButton = new JButton("Objednávka");
-        JButton bookDetailButton = new JButton("Book Detail");
+        JButton bookDetailButton = new JButton("Knihy");
         JButton returnBookButton = new JButton("Vrátit knihu");
 
         // Create the card panel to hold the different panels
