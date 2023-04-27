@@ -72,6 +72,10 @@ public class AddBook extends JPanel {
 
         JLabel descriptionLabel = new JLabel("Popis:");
         JTextArea descriptionArea = new JTextArea(10, 20);
+
+        descriptionArea.setWrapStyleWord(true);
+        descriptionArea.setLineWrap(true);
+
         JScrollPane descriptionScrollPane = new JScrollPane(descriptionArea);
 
         JButton addAuthorButton = new JButton("Přidat autora");
