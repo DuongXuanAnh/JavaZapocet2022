@@ -22,7 +22,7 @@ public class BookDetail extends JPanel {
     private JButton editButton;
     private JButton updateButton;
 
-    private ArrayList<JPanel> authorComBoxDeleteBtnPanelList = new ArrayList<>();
+    private ArrayList<JPanel> authorComBoxDeleteBtnPanelList;
 
     int idAuthorFilter;
 
@@ -34,6 +34,7 @@ public class BookDetail extends JPanel {
 
 
     public BookDetail() {
+
         setLayout(new BorderLayout());
 
         // Create a titled border with a larger font
@@ -88,6 +89,7 @@ public class BookDetail extends JPanel {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() == 2) {
+                    authorComBoxDeleteBtnPanelList = new ArrayList<>();
                     int row = resultsTable.getSelectedRow();
                     int id = (int) resultsTable.getValueAt(row, 0);
                     showBookDetail(id);
@@ -187,7 +189,6 @@ public class BookDetail extends JPanel {
     private void updateTableModel() {
         String query = searchField.getText();
         String sql;
-        System.out.println(idAuthorFilter);
         if(idAuthorFilter == 0){
             sql = "SELECT id, nazev, amount, cena FROM kniha WHERE nazev LIKE '%" + query + "%'";
         }else{
@@ -378,6 +379,10 @@ public class BookDetail extends JPanel {
                     updateStatement.setString(6, updatedDescription);
                     updateStatement.setInt(7, id);
                     updateStatement.executeUpdate();
+
+                    for(int i = 0; i < authorComBoxDeleteBtnPanelList.size(); i++){
+                        System.out.println(i);
+                    }
 
                     updateTableModel();
                 }
