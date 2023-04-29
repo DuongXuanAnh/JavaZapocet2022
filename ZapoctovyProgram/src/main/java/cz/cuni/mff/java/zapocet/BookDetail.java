@@ -10,6 +10,7 @@ import java.awt.event.*;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,12 +22,16 @@ public class BookDetail extends JPanel {
     private JButton editButton;
     private JButton updateButton;
 
+    private ArrayList<JPanel> authorComBoxDeleteBtnPanelList = new ArrayList<>();
+
     int idAuthorFilter;
 
     private JButton addBookToDocumentButton;
 
     private JComboBox<String> allAuthorsComboBox;
     Map<String, Integer> authorIdMap;
+
+
 
     public BookDetail() {
         setLayout(new BorderLayout());
@@ -73,10 +78,6 @@ public class BookDetail extends JPanel {
         JLabel westLabel = new JLabel("Název knihy: ");
         northPanel.add(westLabel, BorderLayout.WEST);
         northPanel.add(searchField, BorderLayout.CENTER);
-
-
-        JLabel southLabel = new JLabel("South Label");
-        northPanel.add(southLabel, BorderLayout.SOUTH);
 
         // Create the table model and table
         String[] columnNames = {"ID", "Název", "Počet kusů", "Cena"};
@@ -219,7 +220,10 @@ public class BookDetail extends JPanel {
         }
     }
 
-    private JComboBox<String> createAllAuthorsComboBox(int defaultAuthorId){
+    private JPanel createAllAuthorsComboBox(int selectedAuthorId) {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
+
         allAuthorsComboBox = new JComboBox<>();
         authorIdMap = new HashMap<>();
         try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/java_winter", "root", "")) {
@@ -231,7 +235,7 @@ public class BookDetail extends JPanel {
                 String name = resultSet.getString("jmeno");
                 allAuthorsComboBox.addItem(name);
                 authorIdMap.put(name, id); // Store name and ID in the map
-                if (id == defaultAuthorId) {
+                if (id == selectedAuthorId) {
                     allAuthorsComboBox.setSelectedItem(name);
                 }
             }
@@ -239,8 +243,25 @@ public class BookDetail extends JPanel {
             System.out.println("Error loading authors: " + ex.getMessage());
         }
 
+        JButton deleteButton = new JButton("X");
+        deleteButton.addActionListener(e -> {
+            if(authorComBoxDeleteBtnPanelList.size() > 1){
+                Container parent = panel.getParent();
+                authorComBoxDeleteBtnPanelList.remove(panel);
+                parent.remove(panel);
+                parent.revalidate();
+                parent.repaint();
+            }else{
+                Notification.showErrorMessage("Kniha musí mít alespoň jednoho autora");
+            }
+        });
 
-        return allAuthorsComboBox;
+        panel.add(allAuthorsComboBox);
+        authorComBoxDeleteBtnPanelList.add(panel);
+        panel.add(Box.createHorizontalStrut(5)); // add some horizontal space between the components
+        panel.add(deleteButton);
+
+        return panel;
     }
 
     private void showBookDetail(int id) {
@@ -270,28 +291,72 @@ public class BookDetail extends JPanel {
                 JTextField amountField = new JTextField(String.valueOf(amount));
                 JTextArea descriptionArea = new JTextArea(description);
 
-                JPanel panel = new JPanel(new GridLayout(0, 1));
-                panel.add(new JLabel("Název:"));
-                panel.add(titleField);
-                panel.add(new JLabel("Žánr:"));
-                panel.add(genreComboBox);
-                panel.add(new JLabel("Rok vydání:"));
-                panel.add(yearField);
-                panel.add(new JLabel("Cena:"));
-                panel.add(priceField);
-                panel.add(new JLabel("Množství:"));
-                panel.add(amountField);
-                panel.add(new JLabel("Popis:"));
-                panel.add(new JScrollPane(descriptionArea));
-                panel.add(new JLabel("Autor:"));
-                panel.add(createAllAuthorsComboBox(resultSet.getInt("autor.id")));
+                JPanel panel = new JPanel();
+                panel.setLayout(new GridBagLayout());
+                GridBagConstraints gbc = new GridBagConstraints();
+                gbc.insets = new Insets(5, 5, 5, 5);
+                gbc.fill = GridBagConstraints.HORIZONTAL;
 
+                gbc.gridx = 0;
+                gbc.gridy = 0;
+                panel.add(new JLabel("Název:"), gbc);
+
+                gbc.gridx = 1;
+                panel.add(titleField, gbc);
+
+                gbc.gridx = 0;
+                gbc.gridy = 1;
+                panel.add(new JLabel("Žánr:"), gbc);
+
+                gbc.gridx = 1;
+                panel.add(genreComboBox, gbc);
+
+                gbc.gridx = 0;
+                gbc.gridy = 2;
+                panel.add(new JLabel("Rok vydání:"), gbc);
+
+                gbc.gridx = 1;
+                panel.add(yearField, gbc);
+
+                gbc.gridx = 0;
+                gbc.gridy = 3;
+                panel.add(new JLabel("Cena:"), gbc);
+
+                gbc.gridx = 1;
+                panel.add(priceField, gbc);
+
+                gbc.gridx = 0;
+                gbc.gridy = 4;
+                panel.add(new JLabel("Množství:"), gbc);
+
+                gbc.gridx = 1;
+                panel.add(amountField, gbc);
+
+                gbc.gridx = 0;
+                gbc.gridy = 5;
+                panel.add(new JLabel("Popis:"), gbc);
+
+                gbc.gridx = 1;
+                panel.add(new JScrollPane(descriptionArea), gbc);
+
+                gbc.gridx = 0;
+                gbc.gridy = 6;
+                panel.add(new JLabel("Autor:"), gbc);
+
+                gbc.gridx = 1;
+                panel.add(createAllAuthorsComboBox(resultSet.getInt("autor.id")), gbc);
+
+                int row = 7;
                 while(resultSet.next()){
-                    panel.add(createAllAuthorsComboBox(resultSet.getInt("autor.id")));
+                    gbc.gridx = 1;
+                    gbc.gridy = row;
+                    panel.add(createAllAuthorsComboBox(resultSet.getInt("autor.id")), gbc);
+                    row++;
                 }
 
-                JButton addAuthorButton = new JButton("Přidat autora");
-                panel.add(addAuthorButton);
+                gbc.gridx = 1;
+                gbc.gridy = row;
+                panel.add(new JButton("Přidat autora"), gbc);
 
                 int result = JOptionPane.showConfirmDialog(null, panel, "Detail knihy", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
