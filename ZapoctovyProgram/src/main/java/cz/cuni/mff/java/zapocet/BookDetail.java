@@ -22,6 +22,8 @@ public class BookDetail extends JPanel {
     private JButton editButton;
     private JButton updateButton;
 
+    private int bookID;
+
     private ArrayList<JPanel> authorComBoxDeleteBtnPanelList;
 
     int idAuthorFilter;
@@ -45,7 +47,7 @@ public class BookDetail extends JPanel {
                 TitledBorder.DEFAULT_POSITION,
                 new Font("Arial", Font.BOLD, 20)); // Set the font to 16pt Arial Bold
 
-// Set the border on the panel
+        // Set the border on the panel
         setBorder(titledBorder);
 
         // Create the search field
@@ -91,8 +93,8 @@ public class BookDetail extends JPanel {
                 if (e.getClickCount() == 2) {
                     authorComBoxDeleteBtnPanelList = new ArrayList<>();
                     int row = resultsTable.getSelectedRow();
-                    int id = (int) resultsTable.getValueAt(row, 0);
-                    showBookDetail(id);
+                    bookID = (int) resultsTable.getValueAt(row, 0);
+                    showBookDetail(bookID);
                 }
             }
 
@@ -140,12 +142,12 @@ public class BookDetail extends JPanel {
                     if (resultsTable.getCellEditor() != null) {
                         resultsTable.getCellEditor().stopCellEditing();
                     }
-                    int id = (int) resultsTable.getValueAt(row, 0);
+                    bookID = (int) resultsTable.getValueAt(row, 0);
                     String title = (String) resultsTable.getValueAt(row, 1);
                     String priceAsString = resultsTable.getValueAt(row, 2).toString();
                     double price = Double.parseDouble(priceAsString);
 
-                    updateBook(id, title, price);
+                    updateBook(bookID, title, price);
                     resultsTable.setDefaultEditor(Object.class, null);
                     updateButton.setEnabled(false);
 
@@ -184,6 +186,8 @@ public class BookDetail extends JPanel {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
+        updateTableModel();
     }
 
     private void updateTableModel() {
@@ -356,35 +360,81 @@ public class BookDetail extends JPanel {
                 }
 
                 gbc.gridx = 1;
-                gbc.gridy = row;
-                panel.add(new JButton("Přidat autora"), gbc);
+                gbc.gridy = 1000;
+                JButton addAuthorButton = new JButton("Přidat autora");
+                panel.add(addAuthorButton, gbc);
+
+                addAuthorButton.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        JPanel newComboBox = createAllAuthorsComboBox(0); // replace 0 with the default author ID
+                        gbc.gridy--; // increment the grid Y position
+                        panel.add(newComboBox, gbc); // add the new combo box to the panel
+
+                        // Update the layout and preferred size of the panel
+                        panel.revalidate();
+                        panel.setPreferredSize(panel.getPreferredSize());
+
+                        // Find the top-level container of the current component (e.g., JFrame)
+                        Window topLevelContainer = SwingUtilities.getWindowAncestor(panel);
+
+                        // Repack the top-level container to adjust its size
+                        if (topLevelContainer instanceof JFrame) {
+                            ((JFrame) topLevelContainer).pack();
+                        }
+
+                        // Repaint the entire GUI
+                        topLevelContainer.repaint();
+                    }
+                });
 
                 int result = JOptionPane.showConfirmDialog(null, panel, "Detail knihy", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
                 if (result == JOptionPane.OK_OPTION) {
-                    String updatedTitle = titleField.getText();
-                    int updatedYear = Integer.parseInt(yearField.getText());
-                    double updatedPrice = Double.parseDouble(priceField.getText());
-                    String updatedGenre = (String) genreComboBox.getSelectedItem();
-                    int updatedAmount = Integer.parseInt(amountField.getText());
-                    String updatedDescription = descriptionArea.getText();
+                    try{
+                        String updatedTitle = titleField.getText();
+                        int updatedYear = Integer.parseInt(yearField.getText());
+                        double updatedPrice = Double.parseDouble(priceField.getText());
+                        String updatedGenre = (String) genreComboBox.getSelectedItem();
+                        int updatedAmount = Integer.parseInt(amountField.getText());
+                        String updatedDescription = descriptionArea.getText();
 
-                    String updateSql = "UPDATE kniha SET nazev=?, rok_vydani=?, cena=?, zanr=?, amount=?, popis=? WHERE id=?";
-                    PreparedStatement updateStatement = connection.prepareStatement(updateSql);
-                    updateStatement.setString(1, updatedTitle);
-                    updateStatement.setInt(2, updatedYear);
-                    updateStatement.setDouble(3, updatedPrice);
-                    updateStatement.setString(4, updatedGenre);
-                    updateStatement.setInt(5, updatedAmount);
-                    updateStatement.setString(6, updatedDescription);
-                    updateStatement.setInt(7, id);
-                    updateStatement.executeUpdate();
+                        String updateSql = "UPDATE kniha SET nazev=?, rok_vydani=?, cena=?, zanr=?, amount=?, popis=? WHERE id=?";
+                        PreparedStatement updateStatement = connection.prepareStatement(updateSql);
+                        updateStatement.setString(1, updatedTitle);
+                        updateStatement.setInt(2, updatedYear);
+                        updateStatement.setDouble(3, updatedPrice);
+                        updateStatement.setString(4, updatedGenre);
+                        updateStatement.setInt(5, updatedAmount);
+                        updateStatement.setString(6, updatedDescription);
+                        updateStatement.setInt(7, id);
+                        updateStatement.executeUpdate();
 
-                    for(int i = 0; i < authorComBoxDeleteBtnPanelList.size(); i++){
-                        System.out.println(i);
+                        deleteAllConnectiveAuthorsBooks(bookID);
+
+                        // loop through each panel in the list
+                        for (JPanel p : authorComBoxDeleteBtnPanelList) {
+                            // get the JComboBox from the panel
+                            JComboBox<String> comboBox = (JComboBox<String>) p.getComponent(0);
+                            // get the selected value from the JComboBox
+                            String selectedValue = (String) comboBox.getSelectedItem();
+                            // do something with the selected value
+                            System.out.println("Selected value: " + selectedValue);
+
+                            System.out.println(authorIdMap.get(selectedValue));
+
+                            addAuthorForBook(authorIdMap.get(selectedValue), bookID);
+                        }
+
+                        updateTableModel();
+
+                        Notification.showSuccessMessage("Kniha byla upravená");
+
+                    }catch(SQLException e){
+                        Notification.showErrorMessage("Nestala chyba, zkuste to znovu");
+                        System.out.println("Error: " + e.getMessage());
                     }
 
-                    updateTableModel();
                 }
             }
         } catch (SQLException e) {
@@ -478,6 +528,31 @@ public class BookDetail extends JPanel {
             }
         });
         panel.add(authorComboBox, BorderLayout.NORTH);
+    }
+
+
+    private void addAuthorForBook(int idAutor, int idBook) throws SQLException{
+        String sql_kniha_autor = "INSERT INTO kniha_autor (id_kniha, id_autor) VALUES (?, ?)";
+        try{
+            PreparedStatement statement = connection.prepareStatement(sql_kniha_autor);
+            statement.setInt(1, idBook);
+            statement.setInt(2, idAutor);
+            statement.executeUpdate();
+
+        } catch (SQLException e) {
+            System.out.println("Error: " + e.getMessage());
+        }
+    }
+
+    private void deleteAllConnectiveAuthorsBooks(int idBook){
+        String sql_kniha_autor = "DELETE FROM kniha_autor WHERE id_kniha = ?";
+        try{
+            PreparedStatement statement = connection.prepareStatement(sql_kniha_autor);
+            statement.setInt(1, idBook);
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            System.out.println("Error: " + e.getMessage());
+        }
     }
 
 }

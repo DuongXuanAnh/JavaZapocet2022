@@ -81,9 +81,7 @@ public class Main {
         frame.getContentPane().add(menuPanel, BorderLayout.NORTH);
         frame.getContentPane().add(cardPanel, BorderLayout.CENTER);
 
-        // Set the frame to be displayed in full screen
-        frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
-
+        frame.pack();
         frame.setVisible(true);
     }
 }
