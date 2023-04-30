@@ -305,7 +305,17 @@ public class BookDetail extends JPanel {
                 JComboBox<String> genreComboBox = new JComboBox<>(new String[]{"Sci-fi (vědeckofantastický)", "Romantika", "Thriller", "Detektivka", "Fantasy", "Horor", "Komedie", "Akční", "Drama", "Historický"}); // Add your genres here
                 genreComboBox.setSelectedItem(genre);
                 JTextField amountField = new JTextField(String.valueOf(amount));
+
+
                 JTextArea descriptionArea = new JTextArea(description);
+                descriptionArea.setRows(5); // set the number of rows
+                descriptionArea.setLineWrap(true); // enable line wrapping
+                descriptionArea.setWrapStyleWord(true); // wrap at word boundaries
+
+                JScrollPane scrollPane = new JScrollPane(descriptionArea);
+                scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+                scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+
 
                 JPanel panel = new JPanel();
                 panel.setLayout(new GridBagLayout());
@@ -353,8 +363,10 @@ public class BookDetail extends JPanel {
                 gbc.gridy = 5;
                 panel.add(new JLabel("Popis:"), gbc);
 
+                // Add the JScrollPane to the panel instead of the descriptionArea
                 gbc.gridx = 1;
-                panel.add(new JScrollPane(descriptionArea), gbc);
+                gbc.gridy = 5;
+                panel.add(scrollPane, gbc);
 
                 gbc.gridx = 0;
                 gbc.gridy = 6;
