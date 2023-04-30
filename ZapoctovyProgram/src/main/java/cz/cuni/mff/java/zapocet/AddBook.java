@@ -13,8 +13,14 @@ import java.awt.event.ActionListener;
 import java.sql.*;
 import java.text.NumberFormat;
 
-public class AddBook extends JPanel {
 
+/**
+ The AddBook class extends JPanel and represents a panel for adding a new book to the library.
+ It contains various components such as text fields, combo boxes, and buttons to input book information.
+ The information is validated and stored in the database upon submission of the form.
+ Additionally, the panel can be reset to its initial state for adding another book.
+ */
+public class AddBook extends JPanel {
     private List<JComboBox<String>> authorComboBoxes;
     int positionCombobox = 3;
 

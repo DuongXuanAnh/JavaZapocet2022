@@ -14,6 +14,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * This class represents a panel for displaying and managing book details, including the book's ID, title, number of copies, and price.
+ * It allows users to search for books by title, edit book details, update the book database, and add books to their shopping cart.
+ * The panel includes a table for displaying book details, as well as buttons for editing, updating, and adding books to the shopping cart.
+ * The class connects to a MySQL database to retrieve book data and update book details as needed.
+ * Additionally, the class provides functionality for displaying and managing book author information, including the author's ID and name.
+ */
 public class BookDetail extends JPanel {
     private JTextField searchField;
     private JTable resultsTable;
@@ -32,8 +39,6 @@ public class BookDetail extends JPanel {
 
     private JComboBox<String> allAuthorsComboBox;
     Map<String, Integer> authorIdMap;
-
-
 
     public BookDetail() {
 
@@ -172,7 +177,13 @@ public class BookDetail extends JPanel {
 
                     int id = (int) resultsTable.getValueAt(row, 0);
                     double price = (double) resultsTable.getValueAt(row, 3);
-                    addBookToDocument(id, price);
+                    int amount = (int) resultsTable.getValueAt(row, 2);
+
+                    if(amount >= 1){
+                        addBookToDocument(id, price);
+                    }else{
+                        Notification.showErrorMessage("Kniha není momentálně dostupná");
+                    }
                 }
             }
         });
@@ -225,7 +236,7 @@ public class BookDetail extends JPanel {
         }
     }
 
-    private JPanel createAllAuthorsComboBox(int selectedAuthorId) {
+    private JPanel createPanelAuthorsComboBox(int selectedAuthorId) {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
 
@@ -302,6 +313,7 @@ public class BookDetail extends JPanel {
                 gbc.insets = new Insets(5, 5, 5, 5);
                 gbc.fill = GridBagConstraints.HORIZONTAL;
 
+
                 gbc.gridx = 0;
                 gbc.gridy = 0;
                 panel.add(new JLabel("Název:"), gbc);
@@ -349,13 +361,13 @@ public class BookDetail extends JPanel {
                 panel.add(new JLabel("Autor:"), gbc);
 
                 gbc.gridx = 1;
-                panel.add(createAllAuthorsComboBox(resultSet.getInt("autor.id")), gbc);
+                panel.add(createPanelAuthorsComboBox(resultSet.getInt("autor.id")), gbc);
 
                 int row = 7;
                 while(resultSet.next()){
                     gbc.gridx = 1;
                     gbc.gridy = row;
-                    panel.add(createAllAuthorsComboBox(resultSet.getInt("autor.id")), gbc);
+                    panel.add(createPanelAuthorsComboBox(resultSet.getInt("autor.id")), gbc);
                     row++;
                 }
 
@@ -367,7 +379,7 @@ public class BookDetail extends JPanel {
                 addAuthorButton.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
-                        JPanel newComboBox = createAllAuthorsComboBox(0); // replace 0 with the default author ID
+                        JPanel newComboBox = createPanelAuthorsComboBox(0); // replace 0 with the default author ID
                         gbc.gridy--; // increment the grid Y position
                         panel.add(newComboBox, gbc); // add the new combo box to the panel
 
@@ -436,12 +448,20 @@ public class BookDetail extends JPanel {
                     }
 
                 }
+
+
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
+    /**
+     Updates the details of a book in the database.
+     @param id the ID of the book to update
+     @param title the new title of the book
+     @param price the new price of the book
+     */
     private void updateBook(int id, String title, double price) {
         String sql = "UPDATE kniha SET nazev=?, cena=? WHERE id=?";
         try {
@@ -458,6 +478,12 @@ public class BookDetail extends JPanel {
         }
     }
 
+
+    /**
+     Adds a book to the user's shopping cart by writing its ID, price, and quantity to a file.
+     @param id the ID of the book to add
+     @param price the price of the book to add
+     */
     private void addBookToDocument(int id, double price){
         String fileName = "OrderBooks.txt";
         String content = id + " " + price + " " + 1;
@@ -476,6 +502,10 @@ public class BookDetail extends JPanel {
         }
     }
 
+    /**
+     Sets up the north panel of the GUI by adding a JComboBox to filter books by author.
+     @param panel the JPanel to add the JComboBox to
+     */
     private void NorthPanelArea(JPanel panel){
         JComboBox<String> authorComboBox = new JComboBox<>();
         authorComboBox.addItem("");
@@ -530,7 +560,13 @@ public class BookDetail extends JPanel {
         panel.add(authorComboBox, BorderLayout.NORTH);
     }
 
-
+    /**
+     Adds an author for a given book ID to the "kniha_autor" table.
+     This method inserts a new row into the "kniha_autor" table with the given book ID and author ID.
+     @param idAutor the ID of the author to be added
+     @param idBook the ID of the book to add the author to
+     @throws SQLException if a database access error occurs or the SQL query is invalid
+     */
     private void addAuthorForBook(int idAutor, int idBook) throws SQLException{
         String sql_kniha_autor = "INSERT INTO kniha_autor (id_kniha, id_autor) VALUES (?, ?)";
         try{
@@ -544,6 +580,12 @@ public class BookDetail extends JPanel {
         }
     }
 
+    /**
+     Deletes all connective authors books associated with a given book ID.
+     This method deletes all rows from the "kniha_autor" table where the "id_kniha" column matches the given book ID.
+     @param idBook the ID of the book whose connective authors books should be deleted
+     @throws SQLException if a database access error occurs or the SQL query is invalid
+     */
     private void deleteAllConnectiveAuthorsBooks(int idBook){
         String sql_kniha_autor = "DELETE FROM kniha_autor WHERE id_kniha = ?";
         try{
