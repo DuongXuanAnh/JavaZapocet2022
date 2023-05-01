@@ -40,6 +40,12 @@ public class BookDetail extends JPanel {
     private JComboBox<String> allAuthorsComboBox;
     Map<String, Integer> authorIdMap;
 
+    /**
+     * Constructs a new BookDetail object, which provides a user interface for displaying and managing book details.
+     * The user interface includes a search field, a table of books with edit and update buttons, and a button for adding a book to a document.
+     * The constructor connects to a MySQL database and sets up listeners for events such as document changes and mouse clicks on the table rows.
+     * It calls the updateTableModel() method to update the table with the latest search results.
+     */
     public BookDetail() {
 
         setLayout(new BorderLayout());
@@ -73,8 +79,6 @@ public class BookDetail extends JPanel {
                 updateTableModel();
             }
         });
-
-
 
         JPanel northPanel = new JPanel(new BorderLayout());
 
@@ -201,6 +205,10 @@ public class BookDetail extends JPanel {
         updateTableModel();
     }
 
+    /**
+     Updates the table model with books matching the search query and, if an author filter is active,
+     also filters by the selected author ID.
+     */
     private void updateTableModel() {
         String query = searchField.getText();
         String sql;
@@ -236,6 +244,13 @@ public class BookDetail extends JPanel {
         }
     }
 
+    /**
+     Creates a JPanel with a JComboBox that displays all the authors stored in the database and a delete button to remove the panel.
+
+     @param selectedAuthorId the ID of the author to be selected in the JComboBox. If 0, no author is selected.
+
+     @return the JPanel created with the JComboBox and the delete button.
+     */
     private JPanel createPanelAuthorsComboBox(int selectedAuthorId) {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
@@ -280,14 +295,18 @@ public class BookDetail extends JPanel {
         return panel;
     }
 
+    /**
+     Shows a dialog box with the details of a book with the given ID.
+     @param id the ID of the book to show details for
+     */
     private void showBookDetail(int id) {
         try {
             String sql = "SELECT * \n" +
-                         "FROM kniha \n" +
-                         "JOIN kniha_autor \n" +
-                         "ON kniha_autor.id_kniha = kniha.id\n" +
-                         "JOIN autor ON autor.id = kniha_autor.id_autor\n" +
-                         "WHERE kniha.id = ?";
+                    "FROM kniha \n" +
+                    "JOIN kniha_autor \n" +
+                    "ON kniha_autor.id_kniha = kniha.id\n" +
+                    "JOIN autor ON autor.id = kniha_autor.id_autor\n" +
+                    "WHERE kniha.id = ?";
             PreparedStatement statement = connection.prepareStatement(sql);
             statement.setInt(1, id);
             ResultSet resultSet = statement.executeQuery();
@@ -547,7 +566,7 @@ public class BookDetail extends JPanel {
                         return;
                     }
                     Integer authorId = authorIdMap.get(selectedAuthor);
-                        idAuthorFilter = authorId;
+                    idAuthorFilter = authorId;
 
 
                     try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/java_winter", "root", "")) {
