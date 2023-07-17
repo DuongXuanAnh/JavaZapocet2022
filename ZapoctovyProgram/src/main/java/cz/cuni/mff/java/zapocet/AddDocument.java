@@ -94,7 +94,7 @@ public class AddDocument extends JPanel {
                     // Get the text entered by the user and display it
                     String idString = customerIDTextField.getText();
 
-                    try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/java_winter", "root", "")) {
+                    try (Connection conn = Config.getConnection()) {
                         String sql = "SELECT id, jmeno, datum_narozeni FROM zakaznik";
                         PreparedStatement statement = conn.prepareStatement(sql);
                         ResultSet resultSet = statement.executeQuery();
@@ -140,7 +140,7 @@ public class AddDocument extends JPanel {
             return;
         }
 
-        try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/java_winter", "root", "")){
+        try (Connection conn = Config.getConnection()){
             String sql = "SELECT * FROM kniha WHERE id IN (";
             for (int i = 0; i < chosenBookID.size(); i++) {
                 sql += "?";
@@ -380,17 +380,6 @@ public class AddDocument extends JPanel {
         return temp;
     }
 
-
-    /**
-     Returns a new connection to the "java_winter" MySQL database.
-     @return a new connection to the "java_winter" MySQL database
-     @throws SQLException if there is an error connecting to the database
-     */
-    private Connection getConnection() throws SQLException {
-        return DriverManager.getConnection("jdbc:mysql://localhost:3306/java_winter", "root", "");
-    }
-
-
     /**
      Inserts a record into the "doklad" table with the given total price and rental date, and returns the ID of the new record.
      @param totalPrice the total price of the document
@@ -402,7 +391,7 @@ public class AddDocument extends JPanel {
         String sql_doklad = (dateRentTo == null) ?
                 "INSERT INTO doklad (totalPrice) VALUES (?)" :
                 "INSERT INTO doklad (datumTo, totalPrice) VALUES (?, ?)";
-        PreparedStatement statement_doklad = getConnection().prepareStatement(sql_doklad, Statement.RETURN_GENERATED_KEYS);
+        PreparedStatement statement_doklad = Config.getConnection().prepareStatement(sql_doklad, Statement.RETURN_GENERATED_KEYS);
         if (dateRentTo == null) {
             statement_doklad.setDouble(1, totalPrice);
         } else {
@@ -430,13 +419,13 @@ public class AddDocument extends JPanel {
         for (int i = 0; i < chosenBookID.size(); i++) {
 
             String sql_kniha = "UPDATE kniha SET amount = amount - ? WHERE id = ?";
-            PreparedStatement statement_kniha = getConnection().prepareStatement(sql_kniha);
+            PreparedStatement statement_kniha = Config.getConnection().prepareStatement(sql_kniha);
             statement_kniha.setInt(1, bookQuantity.get(i));
             statement_kniha.setInt(2, chosenBookID.get(i));
             statement_kniha.executeUpdate();
 
             String sql_doklad_kniha = "INSERT INTO doklad_kniha (id_doklad, id_kniha, amount) VALUES (?, ?, ?)";
-            PreparedStatement statement_doklad_kniha = getConnection().prepareStatement(sql_doklad_kniha);
+            PreparedStatement statement_doklad_kniha = Config.getConnection().prepareStatement(sql_doklad_kniha);
             statement_doklad_kniha.setInt(1, dokladId);
             statement_doklad_kniha.setInt(2, chosenBookID.get(i));
             statement_doklad_kniha.setInt(3, bookQuantity.get(i));
@@ -453,7 +442,7 @@ public class AddDocument extends JPanel {
      */
     private void insertDocumentCustomer(int dokladId, int customerID) throws SQLException {
         String sql_doklad_zakaznik = "INSERT INTO doklad_zakaznik (id_doklad, id_zakaznik) VALUES (?, ?)";
-        PreparedStatement statement_doklad_zakaznik = getConnection().prepareStatement(sql_doklad_zakaznik);
+        PreparedStatement statement_doklad_zakaznik = Config.getConnection().prepareStatement(sql_doklad_zakaznik);
         statement_doklad_zakaznik.setInt(1, dokladId);
         statement_doklad_zakaznik.setInt(2, customerID);
         statement_doklad_zakaznik.executeUpdate();

@@ -47,7 +47,7 @@ public class AddAuthor extends JPanel {
                     return;
                 }
 
-                try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/java_winter?useSSL=false", "root", "");
+                try (Connection conn = Config.getConnection();
                      PreparedStatement checkStatement = conn.prepareStatement("SELECT id, jmeno FROM autor WHERE jmeno = ?");
                      PreparedStatement insertStatement = conn.prepareStatement("INSERT INTO autor (jmeno, narodnost) VALUES (?, ?)")) {
                     // Check if the author already exists

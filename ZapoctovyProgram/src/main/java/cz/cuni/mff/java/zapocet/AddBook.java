@@ -46,7 +46,7 @@ public class AddBook extends JPanel {
 
         Map<String, Integer> authorIdMap = new HashMap<>(); // Map to store author names and their IDs
 
-        try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/java_winter", "root", "")) {
+        try (Connection conn = Config.getConnection()) {
             String sql = "SELECT id, jmeno FROM autor";
             PreparedStatement statement = conn.prepareStatement(sql);
             ResultSet resultSet = statement.executeQuery();
@@ -98,7 +98,7 @@ public class AddBook extends JPanel {
                 // Create and populate the new combo box with author names
                 JComboBox<String> newAuthorComboBox = new JComboBox<>();
 
-                try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/java_winter", "root", "")) {
+                try (Connection conn = Config.getConnection()) {
                     String sql = "SELECT id, jmeno FROM autor";
                     PreparedStatement statement = conn.prepareStatement(sql);
                     ResultSet resultSet = statement.executeQuery();
@@ -199,7 +199,7 @@ public class AddBook extends JPanel {
                    System.out.println("Description: " + description);
 
                    // vložení nové knihy do tabulky kniha
-                   try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/java_winter?useSSL=false", "root", "");
+                   try (Connection conn = Config.getConnection();
                         PreparedStatement insertStatement = conn.prepareStatement("INSERT INTO `kniha`(nazev, rok_vydani, cena, zanr, amount, popis) VALUES (?,?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS)) {
 
                        insertStatement.setString(1, name);

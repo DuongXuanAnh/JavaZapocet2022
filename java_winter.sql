@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Apr 11, 2023 at 08:36 PM
+-- Generation Time: May 01, 2023 at 03:08 PM
 -- Server version: 10.4.22-MariaDB
 -- PHP Version: 8.0.13
 
@@ -64,10 +64,13 @@ CREATE TABLE `doklad` (
 
 INSERT INTO `doklad` (`id`, `datum`, `datumTo`, `totalPrice`) VALUES
 (13, '2023-04-11 13:32:15', NULL, 947),
-(14, '2023-04-11 13:49:06', '2023-04-19 22:00:00', 1429),
 (15, '2023-04-11 13:49:41', NULL, 1098),
 (17, '2023-04-11 17:11:42', NULL, 549),
-(18, '2023-04-11 17:15:11', NULL, 549);
+(18, '2023-04-11 17:15:11', NULL, 549),
+(19, '2023-04-11 20:16:55', NULL, 520),
+(26, '2023-04-26 10:45:41', '2023-04-27 22:00:00', 220),
+(28, '2023-04-26 11:37:15', '2023-04-27 22:00:00', 100),
+(29, '2023-04-26 12:29:45', '2023-04-27 22:00:00', 300);
 
 -- --------------------------------------------------------
 
@@ -87,26 +90,12 @@ CREATE TABLE `doklad_kniha` (
 --
 
 INSERT INTO `doklad_kniha` (`id`, `id_doklad`, `id_kniha`, `amount`) VALUES
-(5, 13, 13, 1),
 (6, 13, 4, 3),
 (7, 13, 5, 1),
 (8, 13, 2, 1),
-(9, 14, 13, 5),
-(10, 14, 4, 1),
-(11, 14, 5, 1),
-(12, 14, 2, 1),
-(13, 15, 13, 2),
 (14, 15, 4, 2),
 (15, 15, 5, 2),
-(16, 15, 2, 2),
-(21, 17, 13, 1),
-(22, 17, 4, 1),
-(23, 17, 5, 1),
-(24, 17, 2, 1),
-(25, 18, 13, 1),
-(26, 18, 4, 1),
-(27, 18, 5, 1),
-(28, 18, 2, 1);
+(16, 15, 2, 2);
 
 -- --------------------------------------------------------
 
@@ -126,10 +115,13 @@ CREATE TABLE `doklad_zakaznik` (
 
 INSERT INTO `doklad_zakaznik` (`id`, `id_doklad`, `id_zakaznik`) VALUES
 (1, 13, 2),
-(2, 14, 3),
 (3, 15, 5),
 (5, 17, 2),
-(6, 18, 1);
+(6, 18, 1),
+(7, 19, 5),
+(14, 26, 2),
+(16, 28, 2),
+(17, 29, 3);
 
 -- --------------------------------------------------------
 
@@ -152,11 +144,12 @@ CREATE TABLE `kniha` (
 --
 
 INSERT INTO `kniha` (`id`, `nazev`, `rok_vydani`, `cena`, `zanr`, `amount`, `popis`) VALUES
-(2, 'Bílá nemoc', 1937, 100, 'Drama', 98, 'Bílá nemoc je divadelní hra – drama Karla Čapka z roku 1937. Dílo varuje před nastupujícím fašismem. Jde o jedno z děl varujících před nástupem nacismu v Německu a stalo se posléze i jedním z důvodů plánované autorovy perzekuce gestapem.'),
-(3, 'Romeo and Juliet', 1597, 200, 'Drama', 100, 'Romeo a Julie (Romeo and Juliet) je divadelní hra, kterou napsal William Shakespeare. Premiéru měla v roce 1595. Jedná se o milostnou tragédii, patrně jeden z nejznámějších milostných příběhů v historii světového dramatu. Při psaní příběhu vycházel Shakespeare z básně anglického básníka Arthura Brookea a také všeobecně známé látky o dvou milencích, která byla zpracována již ve starověkém Řecku.'),
-(4, 'Mat Biec', 1990, 199, 'Drama', 98, 'Mat Biec je román spisovatele Nguyen Nhat Anh v této autorské sérii příběhů o lásce teenagerů s Malým ďáblem, Dívka ze včerejška,... Toto je považováno za jedno z děl.typické pro Nguyen Nhat Anh, přeložil překladatel Kato Sakae představit japonským čtenářům titulem Tsuburana hitomi'),
-(5, 'Babička', 1855, 30, 'Historický', 98, 'Babička je novela české spisovatelky Boženy Němcové z roku 1855. Je jejím nejoblíbenějším dílem a je považována za klasiku české literatury. Tato nejčtenější kniha českého národa vyšla jen v češtině více než 300x a přeložena do 21 dalších jazyků.'),
-(13, 'Stařec a moře', 1946, 220, 'Drama', 98, 'Lorem ipsum is a placeholder text commonly used to demonstrate the visual form of a document or a typeface without relying on meaningful content. Lorem ipsum may be used as a placeholder before final copy is available');
+(2, 'Bílá nemoc', 1937, 100, 'Drama', 111, 'Bílá nemoc je divadelní hra – drama Karla Čapka z roku 1937. Dílo varuje před nastupujícím fašismem.'),
+(3, 'Romeo and Juliet', 1597, 200, 'Drama', 100, 'Romeo a Julie (Romeo and Juliet) je divadelní hra, kterou napsal William Shakespeare. Premiéru měla v roce 1595. Jedná se o milostnou tragédii, patrně jeden z nejznámějších milostných příběhů v historii světového dramatu.'),
+(4, 'Mat Biec', 1990, 199, 'Drama', 104, 'Mat Biec je román spisovatele Nguyen Nhat Anh v této autorské sérii příběhů o lásce teenagerů s Malým ďáblem, Dívka ze včerejška,... '),
+(5, 'Babička', 1855, 30, 'Historický', 104, 'Babička je novela české spisovatelky Boženy Němcové z roku 1855. Je jejím nejoblíbenějším dílem a je považována za klasiku české literatury. '),
+(13, 'Stařec a moře', 1946, 220, 'Drama', 126, 'Lorem ipsum is a placeholder text commonly used to demonstrate the visual form of a document or a typeface without relying on meaningful content. '),
+(37, 'Kniha test', 110, 110, 'Horor', 10, 'popis test');
 
 -- --------------------------------------------------------
 
@@ -175,14 +168,13 @@ CREATE TABLE `kniha_autor` (
 --
 
 INSERT INTO `kniha_autor` (`id`, `id_kniha`, `id_autor`) VALUES
-(8, 2, 1),
-(9, 3, 2),
-(10, 4, 4),
-(11, 5, 3),
-(12, 13, 9),
-(13, 13, 1),
-(14, 13, 4),
-(15, 14, 1);
+(84, 36, 1),
+(89, 2, 1),
+(90, 3, 2),
+(91, 4, 4),
+(92, 5, 14),
+(94, 13, 9),
+(97, 37, 3);
 
 -- --------------------------------------------------------
 
@@ -262,43 +254,43 @@ ALTER TABLE `zakaznik`
 -- AUTO_INCREMENT for table `autor`
 --
 ALTER TABLE `autor`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- AUTO_INCREMENT for table `doklad`
 --
 ALTER TABLE `doklad`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
 
 --
 -- AUTO_INCREMENT for table `doklad_kniha`
 --
 ALTER TABLE `doklad_kniha`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=48;
 
 --
 -- AUTO_INCREMENT for table `doklad_zakaznik`
 --
 ALTER TABLE `doklad_zakaznik`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
 
 --
 -- AUTO_INCREMENT for table `kniha`
 --
 ALTER TABLE `kniha`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
 
 --
 -- AUTO_INCREMENT for table `kniha_autor`
 --
 ALTER TABLE `kniha_autor`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=98;
 
 --
 -- AUTO_INCREMENT for table `zakaznik`
 --
 ALTER TABLE `zakaznik`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

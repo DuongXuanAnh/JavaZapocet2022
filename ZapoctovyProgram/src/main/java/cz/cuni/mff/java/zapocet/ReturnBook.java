@@ -45,7 +45,7 @@ public class ReturnBook extends JPanel {
         submitButton.setVisible(false);
 
         submitButton.addActionListener(e -> {
-            try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/java_winter", "root", "")) {
+            try (Connection conn = Config.getConnection()) {
 
                 int documentID = Integer.parseInt(documentIDString);
 
@@ -87,7 +87,7 @@ public class ReturnBook extends JPanel {
             // Get the text entered by the user and display it
             documentIDString = documentIDTextField.getText();
 
-            try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/java_winter", "root", "")) {
+            try (Connection conn = Config.getConnection()) {
                 String sql = "SELECT kniha.nazev AS nazev, doklad.datum, doklad.datumTo, kd.amount, zakaznik.jmeno, zakaznik.id, kniha.id AS bookID\n" +
                         "FROM doklad\n" +
                         "JOIN doklad_kniha AS kd ON doklad.id = kd.id_doklad\n" +

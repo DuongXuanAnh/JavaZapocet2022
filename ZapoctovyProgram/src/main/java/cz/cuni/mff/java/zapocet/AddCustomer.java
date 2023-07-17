@@ -92,7 +92,7 @@ public class AddCustomer extends JPanel {
                 SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
                 String dateStr = format.format(selectedDate);
 
-                try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/java_winter", "root", "")) {
+                try (Connection conn = Config.getConnection()) {
                     String sql = "INSERT INTO zakaznik (jmeno, datum_narozeni) VALUES (?, ?)";
                     PreparedStatement statement = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
                     statement.setString(1, customerName);

@@ -25,7 +25,6 @@ public class BookDetail extends JPanel {
     private JTextField searchField;
     private JTable resultsTable;
     private DefaultTableModel tableModel;
-    private Connection connection;
     private JButton editButton;
     private JButton updateButton;
 
@@ -195,13 +194,6 @@ public class BookDetail extends JPanel {
 
         add(buttonPanel, BorderLayout.SOUTH);
 
-        // Connect to the database
-        try {
-            connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/java_winter", "root", "");
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
         updateTableModel();
     }
 
@@ -225,7 +217,7 @@ public class BookDetail extends JPanel {
                     "AND autor.id = ?";
         }
         try {
-            PreparedStatement statement = connection.prepareStatement(sql);
+            PreparedStatement statement = Config.getConnection().prepareStatement(sql);
 
             if(idAuthorFilter != 0){
                 statement.setInt(1, idAuthorFilter);
@@ -257,7 +249,7 @@ public class BookDetail extends JPanel {
 
         allAuthorsComboBox = new JComboBox<>();
         authorIdMap = new HashMap<>();
-        try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/java_winter", "root", "")) {
+        try (Connection conn = Config.getConnection()) {
             String sql = "SELECT id, jmeno FROM autor";
             PreparedStatement statement = conn.prepareStatement(sql);
             ResultSet resultSet = statement.executeQuery();
@@ -307,7 +299,7 @@ public class BookDetail extends JPanel {
                     "ON kniha_autor.id_kniha = kniha.id\n" +
                     "JOIN autor ON autor.id = kniha_autor.id_autor\n" +
                     "WHERE kniha.id = ?";
-            PreparedStatement statement = connection.prepareStatement(sql);
+            PreparedStatement statement = Config.getConnection().prepareStatement(sql);
             statement.setInt(1, id);
             ResultSet resultSet = statement.executeQuery();
             if (resultSet.next()) {
@@ -443,7 +435,7 @@ public class BookDetail extends JPanel {
                         String updatedDescription = descriptionArea.getText();
 
                         String updateSql = "UPDATE kniha SET nazev=?, rok_vydani=?, cena=?, zanr=?, amount=?, popis=? WHERE id=?";
-                        PreparedStatement updateStatement = connection.prepareStatement(updateSql);
+                        PreparedStatement updateStatement = Config.getConnection().prepareStatement(updateSql);
                         updateStatement.setString(1, updatedTitle);
                         updateStatement.setInt(2, updatedYear);
                         updateStatement.setDouble(3, updatedPrice);
@@ -496,7 +488,7 @@ public class BookDetail extends JPanel {
     private void updateBook(int id, String title, double price) {
         String sql = "UPDATE kniha SET nazev=?, cena=? WHERE id=?";
         try {
-            PreparedStatement statement = connection.prepareStatement(sql);
+            PreparedStatement statement = Config.getConnection().prepareStatement(sql);
             statement.setString(1, title);
             statement.setDouble(2, price);
             statement.setInt(3, id);
@@ -541,7 +533,7 @@ public class BookDetail extends JPanel {
         JComboBox<String> authorComboBox = new JComboBox<>();
         authorComboBox.addItem("");
         Map<String, Integer> authorIdMap = new HashMap<>(); // Map to store author names and their IDs
-        try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/java_winter", "root", "")) {
+        try (Connection conn = Config.getConnection()) {
             String sql = "SELECT id, jmeno FROM autor";
             PreparedStatement statement = conn.prepareStatement(sql);
             ResultSet resultSet = statement.executeQuery();
@@ -569,7 +561,7 @@ public class BookDetail extends JPanel {
                     idAuthorFilter = authorId;
 
 
-                    try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/java_winter", "root", "")) {
+                    try (Connection conn = Config.getConnection()) {
                         String sql = "SELECT * \n" +
                                 "FROM `kniha` \n" +
                                 "JOIN kniha_autor\n" +
@@ -601,7 +593,7 @@ public class BookDetail extends JPanel {
     private void addAuthorForBook(int idAutor, int idBook) throws SQLException{
         String sql_kniha_autor = "INSERT INTO kniha_autor (id_kniha, id_autor) VALUES (?, ?)";
         try{
-            PreparedStatement statement = connection.prepareStatement(sql_kniha_autor);
+            PreparedStatement statement = Config.getConnection().prepareStatement(sql_kniha_autor);
             statement.setInt(1, idBook);
             statement.setInt(2, idAutor);
             statement.executeUpdate();
@@ -620,7 +612,7 @@ public class BookDetail extends JPanel {
     private void deleteAllConnectiveAuthorsBooks(int idBook){
         String sql_kniha_autor = "DELETE FROM kniha_autor WHERE id_kniha = ?";
         try{
-            PreparedStatement statement = connection.prepareStatement(sql_kniha_autor);
+            PreparedStatement statement = Config.getConnection().prepareStatement(sql_kniha_autor);
             statement.setInt(1, idBook);
             statement.executeUpdate();
         } catch (SQLException e) {
